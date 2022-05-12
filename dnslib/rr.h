@@ -5,14 +5,19 @@
  */
 
 #ifndef _DNS_RR_H
-#define    _DNS_RR_H
+#define _DNS_RR_H
 
 #include <string>
 #include <vector>
 #include <memory>
 #include <cstring>
 
+#ifdef _WIN32
+#include <WinSock2.h>
+#include <WS2tcpip.h>
+#else
 #include <arpa/inet.h>
+#endif
 
 #include "dns.h"
 #include "buffer.h"

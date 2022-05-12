@@ -310,7 +310,7 @@ void Buffer::writeDomainName(const std::string &value, bool compressionAllowed) 
     if (compressionAllowed) {
         // look for domain name parts in buffer and look for fragments for compression
         // loop over all domain labels
-        ssize_t compressionTipPos = -1;
+        int compressionTipPos = -1;
         for (size_t i = 0; i < domainLabelIndexesCount; i++) {
             // position of current label in domain buffer
             auto domainLabelPos = domainLabelIndexes[i];
@@ -329,7 +329,7 @@ void Buffer::writeDomainName(const std::string &value, bool compressionAllowed) 
                 for (size_t buffPos = 0; buffPos < buffLen; buffPos++) {
                     // compare compression tip and content at current position in buffer
                     if (memcmp(bufBase + buffPos, subDomain, subDomainLen) == 0) {
-                        compressionTipPos = ssize_t(buffPos);
+                        compressionTipPos = int(buffPos);
                         break;
                     }
                 }
