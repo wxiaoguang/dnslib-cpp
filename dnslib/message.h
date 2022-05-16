@@ -128,19 +128,19 @@ public:
     uint16_t mRA = 0; // Recursion Available
     uint16_t mRCode = 0; // Response code
 
-    std::vector<QuerySection> questions;
+    std::vector<QuestionSection> questions;
     std::vector<ResourceRecord> answers;
     std::vector<ResourceRecord> authorities;
     std::vector<ResourceRecord> additions;
 
-    bool decode(const uint8_t* buf, size_t size);
-    bool encode(uint8_t* buf, size_t bufSize, size_t &encodedSize);
+    BufferResult decode(const uint8_t* buf, size_t size);
+    BufferResult encode(uint8_t* buf, size_t bufSize, size_t &encodedSize);
 
     // char *buf is for debug purpose only
-    bool decode(const char* buf, size_t size) { return decode((uint8_t *)buf, size); }
-    bool encode(char* buf, size_t bufSize, size_t &encodedSize)  { return encode((uint8_t *)buf, bufSize, encodedSize); }
+    BufferResult decode(const char* buf, size_t size) { return decode((uint8_t *)buf, size); }
+    BufferResult encode(char* buf, size_t bufSize, size_t &encodedSize)  { return encode((uint8_t *)buf, bufSize, encodedSize); }
 
-    std::string asString();
+    std::string toDebugString();
 };
 } // namespace
 #endif	/* _DNS_MESSAGE_H */

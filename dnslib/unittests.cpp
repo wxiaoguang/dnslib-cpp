@@ -103,87 +103,87 @@ static void testCNAME_MB_MD_MF_MG_MR_NS_PTR() {
     rCNAME.decode(buff, wireDataSize);
     TEST_ASSERT(!buff.isBroken());
     TEST_ASSERT(rCNAME.mName == "www.google.com");
-    TEST_ASSERT(rCNAME.getType() == dns::RDATA_CNAME);
+    TEST_ASSERT(rCNAME.getType() == dns::RecordDataType::RDATA_CNAME);
 
     dns::RDataMB rMB;
     buff.seek(0);
     rMB.decode(buff, wireDataSize);
     TEST_ASSERT(!buff.isBroken());
     TEST_ASSERT(rMB.mName == "www.google.com");
-    TEST_ASSERT(rMB.getType() == dns::RDATA_MB);
+    TEST_ASSERT(rMB.getType() == dns::RecordDataType::RDATA_MB);
 
     dns::RDataMD rMD;
     buff.seek(0);
     rMD.decode(buff, wireDataSize);
     TEST_ASSERT(!buff.isBroken());
     TEST_ASSERT(rMD.mName == "www.google.com");
-    TEST_ASSERT(rMD.getType() == dns::RDATA_MD);
+    TEST_ASSERT(rMD.getType() == dns::RecordDataType::RDATA_MD);
 
     dns::RDataMF rMF;
     buff.seek(0);
     rMF.decode(buff, wireDataSize);
     TEST_ASSERT(!buff.isBroken());
     TEST_ASSERT(rMF.mName == "www.google.com");
-    TEST_ASSERT(rMF.getType() == dns::RDATA_MF);
+    TEST_ASSERT(rMF.getType() == dns::RecordDataType::RDATA_MF);
 
     dns::RDataMG rMG;
     buff.seek(0);
     rMG.decode(buff, wireDataSize);
     TEST_ASSERT(!buff.isBroken());
     TEST_ASSERT(rMG.mName == "www.google.com");
-    TEST_ASSERT(rMG.getType() == dns::RDATA_MG);
+    TEST_ASSERT(rMG.getType() == dns::RecordDataType::RDATA_MG);
 
     dns::RDataMR rMR;
     buff.seek(0);
     rMR.decode(buff, wireDataSize);
     TEST_ASSERT(!buff.isBroken());
     TEST_ASSERT(rMR.mName == "www.google.com");
-    TEST_ASSERT(rMR.getType() == dns::RDATA_MR);
+    TEST_ASSERT(rMR.getType() == dns::RecordDataType::RDATA_MR);
 
     dns::RDataNS rNS;
     buff.seek(0);
     rNS.decode(buff, wireDataSize);
     TEST_ASSERT(!buff.isBroken());
     TEST_ASSERT(rNS.mName == "www.google.com");
-    TEST_ASSERT(rNS.getType() == dns::RDATA_NS);
+    TEST_ASSERT(rNS.getType() == dns::RecordDataType::RDATA_NS);
 
     dns::RDataPTR rPTR;
     buff.seek(0);
     rPTR.decode(buff, wireDataSize);
     TEST_ASSERT(!buff.isBroken());
     TEST_ASSERT(rPTR.mName == "www.google.com");
-    TEST_ASSERT(rPTR.getType() == dns::RDATA_PTR);
+    TEST_ASSERT(rPTR.getType() == dns::RecordDataType::RDATA_PTR);
 }
 
 static void testHINFO() {
     dns::RDataHINFO r;
-    TEST_ASSERT(r.getType() == dns::RDATA_HINFO);
+    TEST_ASSERT(r.getType() == dns::RecordDataType::RDATA_HINFO);
 }
 
 
 static void testMINFO() {
     dns::RDataMINFO r;
-    TEST_ASSERT(r.getType() == dns::RDATA_MINFO);
+    TEST_ASSERT(r.getType() == dns::RecordDataType::RDATA_MINFO);
 }
 
 static void testMX() {
     dns::RDataMX r;
-    TEST_ASSERT(r.getType() == dns::RDATA_MX);
+    TEST_ASSERT(r.getType() == dns::RecordDataType::RDATA_MX);
 }
 
 static void testNULL() {
-    dns::RDataNULL r;
-    TEST_ASSERT(r.getType() == dns::RDATA_NULL);
+    dns::RDataUnknown r;
+    TEST_ASSERT(r.getType() == dns::RecordDataType::RDATA_NULL);
 }
 
 static void testSOA() {
     dns::RDataSOA r;
-    TEST_ASSERT(r.getType() == dns::RDATA_SOA);
+    TEST_ASSERT(r.getType() == dns::RecordDataType::RDATA_SOA);
 }
 
 static void testTXT() {
     dns::RDataTXT r;
-    TEST_ASSERT(r.getType() == dns::RDATA_TXT);
+    TEST_ASSERT(r.getType() == dns::RecordDataType::RDATA_TXT);
 
     char txtData[] = {'\x02', '\x65', '\x65', '\x00'};
     dns::Buffer b1(txtData, sizeof(txtData));
@@ -198,7 +198,7 @@ static void testTXT() {
 
 static void testRDataA() {
     dns::RDataA r;
-    TEST_ASSERT(r.getType() == dns::RDATA_A);
+    TEST_ASSERT(r.getType() == dns::RecordDataType::RDATA_A);
 
     char addr[] = {'\x01', '\x02', '\x03', '\x04'};
     dns::Buffer b(addr, sizeof(addr));
@@ -217,7 +217,7 @@ static void testRDataA() {
 
 static void testWKS() {
     dns::RDataWKS r;
-    TEST_ASSERT(r.getType() == dns::RDATA_WKS);
+    TEST_ASSERT(r.getType() == dns::RecordDataType::RDATA_WKS);
 
     char wksData[] = {'\x01', '\x02', '\x03', '\x04', '\xaa', '\xff', '\xef'};
     dns::Buffer b(wksData, sizeof(wksData));
@@ -233,7 +233,7 @@ static void testWKS() {
 
 static void testRDataAAAA() {
     dns::RDataAAAA r;
-    TEST_ASSERT(r.getType() == dns::RDATA_AAAA);
+    TEST_ASSERT(r.getType() == dns::RecordDataType::RDATA_AAAA);
 
     char addr[] = {'\x01', '\x02', '\x03', '\x04', '\x05', '\x06', '\x07', '\x08', '\x09', '\x0a', '\x0b', '\x0c', '\x0d', '\x0e', '\x0f', '\x10'};
     dns::Buffer b(addr, sizeof(addr));
@@ -267,7 +267,7 @@ static void testSRV() {
     dns::RDataSRV r;
     char dasrv[] = "\x00\x14\x00\x00\x14\x95\x04\x61\x6c\x74\x32\x0b\x78\x6d\x70\x70\x2d\x73\x65\x72\x76\x65\x72\x01\x6c\x06\x67\x6f\x6f\x67\x6c\x65\x03\x63\x6f\x6d\x00";
 
-    TEST_ASSERT(r.getType() == dns::RDATA_SRV);
+    TEST_ASSERT(r.getType() == dns::RecordDataType::RDATA_SRV);
     dns::Buffer b(dasrv, sizeof(dasrv) - 1);
     r.decode(b, sizeof(dasrv) - 1);
     TEST_ASSERT(!b.isBroken());
@@ -281,7 +281,7 @@ static void testPacket() {
     // check header without any queries and records
     char packet1[] = "\xd5\xad\x81\x80\x00\x00\x00\x00\x00\x00\x00\x00";
     dns::Message m;
-    TEST_ASSERT(m.decode(packet1, sizeof(packet1) - 1));
+    TEST_ASSERT(m.decode(packet1, sizeof(packet1) - 1) == dns::BufferResult::NoError);
     TEST_ASSERT(m.mId == 0xd5ad);
     TEST_ASSERT(m.mOpCode == 0);
     TEST_ASSERT(m.mAA == 0);
@@ -297,33 +297,33 @@ static void testPacket() {
     // check raw resource records
     char packet2[] = "\xd5\xad\x81\x80\x00\x01\x00\x05\x00\x00\x00\x00\x03\x77\x77\x77\x06\x67\x6f\x6f\x67\x6c\x65\x03\x63\x6f\x6d\x00\x00\x01\x00\x01\xc0\x0c\x00\x05\x00\x01\x00\x00\x00\x05\x00\x08\x03\x77\x77\x77\x01\x6c\xc0\x10\xc0\x2c\x00\x01\x00\x01\x00\x00\x00\x05\x00\x04\x42\xf9\x5b\x68\xc0\x2c\x00\x01\x00\x01\x00\x00\x00\x05\x00\x04\x42\xf9\x5b\x63\xc0\x2c\x00\x01\x00\x01\x00\x00\x00\x05\x00\x04\x42\xf9\x5b\x67\xc0\x2c\x00\x01\x00\x01\x00\x00\x00\x05\x00\x04\x42\xf9\x5b\x93";
     m = dns::Message();
-    TEST_ASSERT(m.decode(packet2, sizeof(packet2) - 1));
+    TEST_ASSERT(m.decode(packet2, sizeof(packet2) - 1) == dns::BufferResult::NoError);
     TEST_ASSERT(m.questions.size() == 1);
     TEST_ASSERT(m.answers.size() == 5);
     TEST_ASSERT(m.authorities.empty());
     TEST_ASSERT(m.additions.empty());
 
     auto &qs = m.questions;
-    TEST_ASSERT(qs[0].mType == dns::RDATA_A);
-    TEST_ASSERT(qs[0].mClass == dns::CLASS_IN);
+    TEST_ASSERT(qs[0].mType == dns::RecordDataType::RDATA_A);
+    TEST_ASSERT(qs[0].mClass == dns::RecordClass::CLASS_IN);
     TEST_ASSERT(qs[0].mName == "www.google.com");
 
     auto &answers = m.answers;
     std::string expected[] = {
-            "<<CNAME domainName=www.l.google.com\n",
-            "<<RData A addr=66.249.91.104\n",
-            "<<RData A addr=66.249.91.99\n",
-            "<<RData A addr=66.249.91.103\n",
-            "<<RData A addr=66.249.91.147\n",
+            "CNAME www.google.com IN 5 name=www.l.google.com",
+            "A www.l.google.com IN 5 addr=66.249.91.104",
+            "A www.l.google.com IN 5 addr=66.249.91.99",
+            "A www.l.google.com IN 5 addr=66.249.91.103",
+            "A www.l.google.com IN 5 addr=66.249.91.147",
     };
     for (size_t i = 0; i < answers.size(); i++) {
-        TEST_ASSERT_EQUAL(answers[i].asString(), expected[i]);
+        TEST_ASSERT_EQUAL(answers[i].toDebugString(), expected[i]);
     }
 
     // check naptr resource records
     char packet3[] = "\x14\x38\x85\x80\x00\x01\x00\x03\x00\x00\x00\x00\x05\x62\x72\x6e\x35\x36\x03\x69\x69\x74\x03\x69\x6d\x73\x00\x00\x23\x00\x01\xc0\x0c\x00\x23\x00\x01\x00\x00\x00\x3c\x00\x2e\x00\x32\x00\x33\x01\x73\x07\x53\x49\x50\x2b\x44\x32\x54\x00\x04\x5f\x73\x69\x70\x04\x5f\x74\x63\x70\x05\x69\x63\x73\x63\x66\x05\x62\x72\x6e\x35\x36\x03\x69\x69\x74\x03\x69\x6d\x73\x00\xc0\x4a\x00\x23\x00\x01\x00\x00\x00\x3c\x00\x2f\x00\x0a\x00\x0a\x01\x73\x07\x53\x49\x50\x2b\x44\x32\x53\x00\x04\x5f\x73\x69\x70\x05\x5f\x73\x63\x74\x70\x05\x69\x63\x73\x63\x66\x05\x62\x72\x6e\x35\x36\x03\x69\x69\x74\x03\x69\x6d\x73\x00\xc0\x85\x00\x23\x00\x01\x00\x00\x00\x3c\x00\x2e\x00\x32\x00\x32\x01\x73\x07\x53\x49\x50\x2b\x44\x32\x55\x00\x04\x5f\x73\x69\x70\x04\x5f\x75\x64\x70\x05\x69\x63\x73\x63\x66\x05\x62\x72\x6e\x35\x36\x03\x69\x69\x74\x03\x69\x6d\x73\x00";
     m = dns::Message();
-    TEST_ASSERT(m.decode(packet3, sizeof(packet3) - 1));
+    TEST_ASSERT(m.decode(packet3, sizeof(packet3) - 1) == dns::BufferResult::NoError);
     TEST_ASSERT(m.questions.size() == 1);
     TEST_ASSERT(m.answers.size() == 3);
     TEST_ASSERT(m.authorities.empty());
@@ -331,22 +331,22 @@ static void testPacket() {
 
     char packetSOA[] = "\x00\x00\x21\x00\x00\x01\x00\x01\x00\x00\x00\x00\x03\x64\x6e\x73\x05\x73\x75\x69\x74\x65\x05\x6c\x6f\x63\x61\x6c\x00\x00\x06\x00\x01\x03\x64\x6e\x73\x05\x73\x75\x69\x74\x65\x05\x6c\x6f\x63\x61\x6c\x00\x00\x06\x00\x01\x00\x00\x0e\x10\x00\x36\x03\x64\x6e\x73\x05\x73\x75\x69\x74\x65\x05\x6c\x6f\x63\x61\x6c\x00\x03\x64\x6e\x73\x05\x73\x75\x69\x74\x65\x05\x6c\x6f\x63\x61\x6c\x00\x77\x82\x0d\xbc\x00\x01\x51\x80\x00\x00\x1c\x20\x00\x36\xee\x80\x00\x02\xa3\x00";
     m = dns::Message();
-    TEST_ASSERT(m.decode(packetSOA, sizeof(packetSOA) - 1));
+    TEST_ASSERT(m.decode(packetSOA, sizeof(packetSOA) - 1) == dns::BufferResult::NoError);
 
     char packetHINFO[] = "\x00\x00\x29\x00\x00\x01\x00\x01\x00\x02\x00\x01\x03\x64\x6e\x73\x05\x73\x75\x69\x74\x65\x05\x6c\x6f\x63\x61\x6c\x00\x00\x06\x00\x01\x03\x64\x6e\x73\x05\x73\x75\x69\x74\x65\x05\x6c\x6f\x63\x61\x6c\x00\x00\x06\x00\xff\x00\x00\x0e\x10\x00\x00\x03\x64\x6e\x73\x05\x73\x75\x69\x74\x65\x05\x6c\x6f\x63\x61\x6c\x00\x00\x01\x00\x01\x00\x00\x0e\x10\x00\x04\x0a\x0a\x01\x0b\x03\x64\x6e\x73\x05\x73\x75\x69\x74\x65\x05\x6c\x6f\x63\x61\x6c\x00\x00\x0d\x00\x01\x00\x00\x0e\x10\x00\x14\x09\x54\x65\x68\x6f\x6d\x79\x6c\x6c\x79\x09\x44\x4e\x53\x2d\x53\x75\x69\x74\x65\x0b\x68\x6f\x73\x74\x31\x2d\x68\x6f\x73\x74\x32\x00\x00\xfa\x00\xff\x00\x00\x00\x00\x00\x3a\x08\x68\x6d\x61\x63\x2d\x6d\x64\x35\x07\x73\x69\x67\x2d\x61\x6c\x67\x03\x72\x65\x67\x03\x69\x6e\x74\x00\x00\x00\x54\x3e\x33\x78\x01\x2c\x00\x10\x6f\xba\x22\x36\xf2\x25\xe2\x35\x13\x8f\x29\xbc\xa7\xb4\x89\x50\x00\x00\x00\x00\x00\x00";
     m = dns::Message();
-    TEST_ASSERT(m.decode(packetHINFO, sizeof(packetHINFO) - 1));
+    TEST_ASSERT(m.decode(packetHINFO, sizeof(packetHINFO) - 1) == dns::BufferResult::NoError);
     // TODO - compare values
 }
 
 static void testPacketInvalid() {
     char packet1[] = "\x00\x00\x01\x00\x00\x01\x00\x01\x00\x01\x00\x02\x03\x64\x6e\x73\x05\x73\x75\x69\x74\x65\x05\x6c\x6f\x63\x61\x6c\x00\x00\x01\x00\x01\x03\x64\x6e\x73\x05\x73\x75\x69\x74\x65\x05\x6c\x6f\x63\x61\x6c\x00\x00\x21\x00\x01\x00\x00\x0e\x10\x00\x08\x49\x00\x00\x00\x00\x00\xc8\x00\x01\x41\xc0\x2e\x00\x1e\x00\x01\x00\x00\x0e\x10\x00\x06\x01\x80\x00\x00\x00\x02\x03\x64\x6e\x73\x05\x73\x75\x69\x74\x65\x05\x6c\x6f\x63\x61\x6c\x00\x00\x63\x00\x01\x00\x00\x0e\x10\x00\x0e\x0d\x76\x3d\x73\x70\x66\x31\x20\x65\x78\x70\x3a\x25\x1e\x0b\x68\x6f\x73\x74\x31\x2d\x68\x6f\x73\x74\x32\x00\x00\xfa\x00\xff\x00\x00\x00\x00\x00\x3a\x08\x68\x6d\x61\x63\x2d\x6d\x64\x35\x07\x73\x69\x67\x2d\x61\x6c\x67\x03\x72\x65\x67\x03\x69\x6e\x74\x00\x00\x00\x54\x3e\x44\xe5\x01\x2c\x00\x10\xe7\x01\x33\xed\x6a\x86\xab\x55\x30\xf3\xdd\xf1\x4f\x87\x9f\x6b\x00\x00\x00\x00\x00\x00";
     dns::Message m1;
-    TEST_ASSERT(!m1.decode(packet1, sizeof(packet1) - 1));
+    TEST_ASSERT(m1.decode(packet1, sizeof(packet1) - 1) != dns::BufferResult::NoError);
 
     char packet2[] = "\x00\x00\x01\x00\x00\x01\x00\x00\x00\x01\x00\x01\x02\x31\x31\x01\x31\x02\x31\x30\x02\x31\x30\x07\x69\x6e\x2d\x61\x64\x64\x72\x04\x61\x72\x70\x61\x00\x00\x0c\x00\x01\x03\x64\x6e\x73\x05\x73\x75\x69\x74\x65\x05\x6c\x6f\x63\x61\x6c\x00\x00\x0e\x00\x01\x00\x00\x0e\x10\x00\x30\x1c\x31\x27\x29\x29\x29\x20\x41\x4e\x44\x20\x28\x28\x28\x27\x66\x6f\x6f\x27\x20\x4c\x49\x4b\x45\x20\x27\x66\x6f\x6f\xc0\x12\x03\x64\x6e\x73\x05\x73\x75\x69\x74\x65\x05\x6c\x6f\x63\x61\x6c\x00\x00\x00\x29\x20\x00\x00\x00\x80\x00\x00\x00";
     dns::Message m2;
-    TEST_ASSERT(!m2.decode(packet2, sizeof(packet2) - 1));
+    TEST_ASSERT(m2.decode(packet2, sizeof(packet2) - 1) != dns::BufferResult::NoError);
 }
 
 static void testCreatePacket() {
@@ -356,7 +356,7 @@ static void testCreatePacket() {
 
     // add NAPTR answer
     auto rr = dns::ResourceRecord();
-    rr.mClass = dns::CLASS_IN;
+    rr.mClass = dns::RecordClass::CLASS_IN;
     rr.mTtl = 60;
 
     auto rdata = std::make_shared<dns::RDataNAPTR>();

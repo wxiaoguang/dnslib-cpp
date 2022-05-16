@@ -14,8 +14,8 @@
 
 namespace dns
 {
-enum class BrokenReason {
-    None,
+enum class BufferResult {
+    NoError,
     BufferOverflow,
     InvalidData,
     LabelCompressionLoop,
@@ -23,8 +23,9 @@ enum class BrokenReason {
     LabelTooLong,
     DomainTooLong,
 };
+
 /**
- * Buffer for DNS protocol parsing and serialization
+ * Buffer for DNS protocol encoding and decoding
  *
  * <domain-name> is a domain name represented as a series of labels, and
  * terminated by a label with zero length.
@@ -70,14 +71,14 @@ public:
     std::string readDomainName(bool compressionAllowed = true);
     void writeDomainName(const std::string &value, bool compressionAllowed = true);
 
-    inline BrokenReason brokenReason() { return broken; }
-    inline bool isBroken() { return broken != BrokenReason::None; }
-    inline void markBroken(BrokenReason b) { broken = b; }
+    inline BufferResult result() { return bufResult; }
+    inline bool isBroken() { return bufResult != BufferResult::NoError; }
+    inline void markBroken(BufferResult b) { bufResult = b; }
 
 private:
     uint8_t *movePtr(uint8_t *newPtr); // returns the old pos ptr. returns nullptr if buffer is broken
 
-    BrokenReason broken{};
+    BufferResult bufResult{};
 
     uint8_t *bufBase;
     uint8_t *bufPtr;

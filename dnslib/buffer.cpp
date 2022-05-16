@@ -187,7 +187,7 @@ std::string Buffer::readDomainName(bool compressionAllowed) { // NOLINT(misc-no-
 
     // store current position to avoid of endless recursion for "bad link addresses"
     if (std::find(linkPos.begin(), linkPos.end(), pos()) != linkPos.end()) {
-        markBroken(BrokenReason::LabelCompressionLoop); // labels compression contains endless loop of links
+        markBroken(BufferResult::LabelCompressionLoop); // labels compression contains endless loop of links
         return domain;
     }
 
@@ -206,7 +206,7 @@ std::string Buffer::readDomainName(bool compressionAllowed) { // NOLINT(misc-no-
         if (ctrlCode >> 6 == 3) {
             // check if compression is allowed
             if (!compressionAllowed) {
-                markBroken(BrokenReason::LabelCompressionDisallowed); // compression link found where links are not allowed
+                markBroken(BufferResult::LabelCompressionDisallowed); // compression link found where links are not allowed
                 return domain;
             }
 
@@ -230,7 +230,7 @@ std::string Buffer::readDomainName(bool compressionAllowed) { // NOLINT(misc-no-
         // otherwise, we are reading a label
         {
             if (ctrlCode > MAX_LABEL_LEN) {
-                markBroken(BrokenReason::LabelTooLong); // too long domain label (max length is 63 characters)
+                markBroken(BufferResult::LabelTooLong); // too long domain label (max length is 63 characters)
                 return domain;
             }
 
@@ -246,7 +246,7 @@ std::string Buffer::readDomainName(bool compressionAllowed) { // NOLINT(misc-no-
     linkPos.pop_back();
 
     if (domain.length() > MAX_DOMAIN_LEN) {
-        markBroken(BrokenReason::DomainTooLong); // domain name is too long
+        markBroken(BufferResult::DomainTooLong); // domain name is too long
         return domain;
     }
 
@@ -258,7 +258,7 @@ void Buffer::writeDomainName(const std::string &value, bool compressionAllowed) 
     size_t domainLabelIndexes[MAX_DOMAIN_LEN + 1]; // one additional byte for terminating zero byte
 
     if (value.length() > MAX_DOMAIN_LEN) {
-        markBroken(BrokenReason::DomainTooLong); // Domain name too long to be stored in dns message
+        markBroken(BufferResult::DomainTooLong); // Domain name too long to be stored in dns message
         return;
     }
     // write empty domain
@@ -277,7 +277,7 @@ void Buffer::writeDomainName(const std::string &value, bool compressionAllowed) 
     while (true) {
         if (value[ix] == '.' || ix == value.length()) {
             if (labelLen > MAX_LABEL_LEN) {
-                markBroken(BrokenReason::LabelTooLong); // Encoding failed because of too long domain label (max length is 63 characters)
+                markBroken(BufferResult::LabelTooLong); // Encoding failed because of too long domain label (max length is 63 characters)
                 return;
             }
             domain[labelLenPos] = (char)labelLen;
@@ -359,11 +359,11 @@ void Buffer::writeDomainName(const std::string &value, bool compressionAllowed) 
 }
 
 uint8_t *Buffer::movePtr(uint8_t *newPtr) {
-    if (broken != BrokenReason::None) return nullptr;
+    if (bufResult != BufferResult::NoError) return nullptr;
 
     size_t p = newPtr - bufBase;
     if (p > bufLen) {
-        markBroken(BrokenReason::BufferOverflow);
+        markBroken(BufferResult::BufferOverflow);
         return nullptr;
     }
 

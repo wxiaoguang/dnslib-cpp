@@ -24,18 +24,20 @@
 
 namespace dns {
 
+class ResourceRecord;
+
 /** Abstract class that act as base for all Resource Record RData types */
 class RData {
+protected:
+    virtual std::ostringstream ossDebugString();
 public:
+    ResourceRecord *record = nullptr;
+
     virtual ~RData() = default;
-
     virtual RecordDataType getType() = 0;
-
     virtual void decode(Buffer &buffer, size_t dataSize) = 0;
-
     virtual void encode(Buffer &buffer) = 0;
-
-    virtual std::string asString() = 0;
+    virtual std::string toDebugString() = 0;
 };
 
 /**
@@ -47,8 +49,8 @@ public:
     std::string mName;
 
     void decode(Buffer &buffer, size_t dataSize) override;
-
     void encode(Buffer &buffer) override;
+    std::string toDebugString() override;
 };
 
 /**
@@ -56,9 +58,7 @@ public:
 */
 class RDataCNAME : public RDataWithName {
 public:
-    RecordDataType getType() override { return RDATA_CNAME; };
-
-    std::string asString() override;
+    RecordDataType getType() override { return RecordDataType::RDATA_CNAME; };
 };
 
 /**
@@ -69,13 +69,10 @@ public:
     std::string mCpu; // CPU type
     std::string mOs; // Operating system type
 
-    RecordDataType getType() override { return RDATA_HINFO; };
-
+    RecordDataType getType() override { return RecordDataType::RDATA_HINFO; };
     void decode(Buffer &buffer, size_t dataSize) override;
-
     void encode(Buffer &buffer) override;
-
-    std::string asString() override;
+    std::string toDebugString() override;
 };
 
 /**
@@ -85,8 +82,7 @@ public:
 */
 class RDataMB : public RDataWithName {
 public:
-    RecordDataType getType() override { return RDATA_MB; };
-    std::string asString() override;
+    RecordDataType getType() override { return RecordDataType::RDATA_MB; };
 };
 
 /**
@@ -97,9 +93,7 @@ public:
 */
 class RDataMD : public RDataWithName {
 public:
-    RecordDataType getType() override { return RDATA_MD; };
-
-    std::string asString() override;
+    RecordDataType getType() override { return RecordDataType::RDATA_MD; };
 };
 
 /**
@@ -110,9 +104,7 @@ public:
 */
 class RDataMF : public RDataWithName {
 public:
-    RecordDataType getType() override { return RDATA_MF; };
-
-    std::string asString() override;
+    RecordDataType getType() override { return RecordDataType::RDATA_MF; };
 };
 
 /**
@@ -123,9 +115,7 @@ public:
 */
 class RDataMG : public RDataWithName {
 public:
-    RecordDataType getType() override { return RDATA_MG; };
-
-    std::string asString() override;
+    RecordDataType getType() override { return RecordDataType::RDATA_MG; };
 };
 
 /**
@@ -141,13 +131,10 @@ public:
     // mailbox specified by the owner of the MINFO RR.
     std::string mMailBx;
 
-    RecordDataType getType() override { return RDATA_MINFO; };
-
+    RecordDataType getType() override { return RecordDataType::RDATA_MINFO; };
     void decode(Buffer &buffer, size_t dataSize) override;
-
     void encode(Buffer &buffer) override;
-
-    std::string asString() override;
+    std::string toDebugString() override;
 };
 
 /**
@@ -158,9 +145,7 @@ public:
 */
 class RDataMR : public RDataWithName {
 public:
-    RecordDataType getType() override { return RDATA_MR; };
-
-    std::string asString() override;
+    RecordDataType getType() override { return RecordDataType::RDATA_MR; };
 };
 
 /**
@@ -175,30 +160,24 @@ public:
     // as a mail exchange for the owner name
     std::string mExchange;
 
-    RecordDataType getType() override { return RDATA_MX; };
-
+    RecordDataType getType() override { return RecordDataType::RDATA_MX; };
     void decode(Buffer &buffer, size_t dataSize) override;
-
     void encode(Buffer &buffer) override;
-
-    std::string asString() override;
+    std::string toDebugString() override;
 };
 
 /** Generic RData field which stores raw RData bytes.
 *
 * This class is used for cases when RData type is not known or
 * class for appropriate type is not implemented. */
-class RDataNULL : public RData {
+class RDataUnknown : public RData {
 public:
     std::vector<uint8_t> mData;
 
-    RecordDataType getType() override { return RDATA_NULL; };
-
+    RecordDataType getType() override { return RecordDataType::RDATA_NULL; };
     void decode(Buffer &buffer, size_t dataSize) override;
-
     void encode(Buffer &buffer) override;
-
-    std::string asString() override;
+    std::string toDebugString() override;
 };
 
 /**
@@ -209,9 +188,7 @@ public:
 */
 class RDataNS : public RDataWithName {
 public:
-    RecordDataType getType() override { return RDATA_NS; };
-
-    std::string asString() override;
+    RecordDataType getType() override { return RecordDataType::RDATA_NS; };
 };
 
 /**
@@ -222,9 +199,7 @@ public:
 */
 class RDataPTR : public RDataWithName {
 public:
-    RecordDataType getType() override { return RDATA_PTR; };
-
-    std::string asString() override;
+    RecordDataType getType() override { return RecordDataType::RDATA_PTR; };
 };
 
 /**
@@ -256,13 +231,10 @@ public:
     // exported with any RR from this zone.
     uint32_t mMinimum = 0;
 
-    RecordDataType getType() override { return RDATA_SOA; };
-
+    RecordDataType getType() override { return RecordDataType::RDATA_SOA; };
     void decode(Buffer &buffer, size_t dataSize) override;
-
     void encode(Buffer &buffer) override;
-
-    std::string asString() override;
+    std::string toDebugString() override;
 };
 
 /**
@@ -276,13 +248,10 @@ public:
     // One or more <character-string>s.
     std::vector<std::string> mTexts;
 
-    RecordDataType getType() override { return RDATA_TXT; };
-
+    RecordDataType getType() override { return RecordDataType::RDATA_TXT; };
     void decode(Buffer &buffer, size_t dataSize) override;
-
     void encode(Buffer &buffer) override;
-
-    std::string asString() override;
+    std::string toDebugString() override;
 };
 
 /**
@@ -290,22 +259,16 @@ public:
 */
 class RDataA : public RData {
 public:
-    RecordDataType getType() override { return RDATA_A; }
-
     void setAddress(const uint8_t *addr) { memcpy(mAddr, addr, 4); }
-
     void setAddress(const std::string &addr) { inet_pton(AF_INET, addr.c_str(), &mAddr); }
-
     uint8_t *getAddress() { return mAddr; };
 
+    RecordDataType getType() override { return RecordDataType::RDATA_A; }
     void decode(Buffer &buffer, size_t dataSize) override;
-
     void encode(Buffer &buffer) override;
-
-    std::string asString() override;
+    std::string toDebugString() override;
 
 private:
-    // 32 bit internet address.
     uint8_t mAddr[4] = {};
 };
 
@@ -316,25 +279,18 @@ class RDataWKS : public RData {
 public:
     // An 8 bit IP protocol number
     uint8_t mProtocol = 0;
-
     // A variable length bit map.  The bit map must be a multiple of 8 bits long.
     std::vector<uint8_t> mBitmap;
 
-    RecordDataType getType() override { return RDATA_WKS; };
-
     void setAddress(const uint8_t *addr) { memcpy(mAddr, addr, 4); }
-
     uint8_t *getAddress() { return mAddr; };
 
+    RecordDataType getType() override { return RecordDataType::RDATA_WKS; };
     void decode(Buffer &buffer, size_t dataSize) override;
-
     void encode(Buffer &buffer) override;
-
-    std::string asString() override;
-
+    std::string toDebugString() override;
 private:
-
-    uint8_t mAddr[4] = {}; // 32 bit internet address.
+    uint8_t mAddr[4] = {};
 };
 
 /**
@@ -342,21 +298,15 @@ private:
 */
 class RDataAAAA : public RData {
 public:
-    RecordDataType getType() override { return RDATA_AAAA; }
-
     void setAddress(const uint8_t *addr) { memcpy(mAddr, addr, 16); }
-
     uint8_t *getAddress() { return mAddr; }
 
+    RecordDataType getType() override { return RecordDataType::RDATA_AAAA; }
     void decode(Buffer &buffer, size_t dataSize) override;
-
     void encode(Buffer &buffer) override;
-
-    std::string asString() override;
-
+    std::string toDebugString() override;
 private:
-    // 128 bit IPv6 address.
-    uint8_t mAddr[16] = {};
+    uint8_t mAddr[16] = {}; // 128 bit IPv6 address.
 };
 
 
@@ -370,13 +320,10 @@ public:
     std::string mRegExp;
     std::string mReplacement;
 
-    RecordDataType getType() override { return RDATA_NAPTR; };
-
+    RecordDataType getType() override { return RecordDataType::RDATA_NAPTR; };
     void decode(Buffer &buffer, size_t dataSize) override;
-
     void encode(Buffer &buffer) override;
-
-    std::string asString() override;
+    std::string toDebugString() override;
 };
 
 /**
@@ -389,18 +336,25 @@ public:
     uint16_t mPort = 0;
     std::string mTarget;
 
-    RecordDataType getType() override { return RDATA_SRV; };
-
+    RecordDataType getType() override { return RecordDataType::RDATA_SRV; };
     void decode(Buffer &buffer, size_t dataSize) override;
     void encode(Buffer &buffer) override;
-
-    std::string asString() override;
+    std::string toDebugString() override;
 };
 
+class RDataOPT : public RData {
+public:
+    std::vector<uint8_t> mData;
+
+    RecordDataType getType() override { return RecordDataType::RDATA_OPT; };
+    void decode(Buffer &buffer, size_t dataSize) override;
+    void encode(Buffer &buffer) override;
+    std::string toDebugString() override;
+};
 
 /** Represents DNS Resource Record
 *
-* Each resource record has the following format:
+* Each resource record has the following format (exceptions: OPT, etc)
 *
 *                                     1  1  1  1  1  1
 *       0  1  2  3  4  5  6  7  8  9  0  1  2  3  4  5
@@ -451,8 +405,9 @@ public:
 */
 class ResourceRecord {
 public:
-    std::string mName; // Domain name to which this resource record pertains
-    RecordClass mClass = CLASS_IN;
+    std::string mDomainName; // Domain name to which this resource record pertains
+    RecordDataType mType = RecordDataType::RDATA_None;
+    RecordClass mClass = RecordClass::CLASS_None;
     uint32_t mTtl = 0;
 
     template<typename T>
@@ -462,13 +417,10 @@ public:
 
     void decode(Buffer &buffer);
     void encode(Buffer &buffer);
-
-    std::string asString();
-
+    std::string toDebugString();
 private:
     std::shared_ptr<RData> mRData;
 };
 
 } // namespace
 #endif    /* _DNS_RR_H */
-

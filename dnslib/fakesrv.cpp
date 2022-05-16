@@ -113,7 +113,7 @@ int main(int argc, char **argv) {
         return 1;
     }
     if (verbosityLevel >= verbosityBasic)
-        cout << "socket binded (port " << listenPort << ")" << endl;
+        cout << "socket listens on port " << listenPort << endl;
 
     unsigned int i = 0;
     for (;;) {
@@ -126,14 +126,14 @@ int main(int argc, char **argv) {
             cout << "Received DNS packet (" << i << ") of size " << n << " bytes" << endl;
         }
         dns::Message m;
-        if (!m.decode(mesg, n)) {
-            cout << "DNS exception occured when parsing incoming data" << endl;
+        if (m.decode(mesg, n) != dns::BufferResult::NoError) {
+            cout << "DNS exception occurred when parsing incoming data" << endl;
             continue;
         }
 
         if (verbosityLevel >= verbosityAll) {
             cout << "-------------------------------------------------------" << endl;
-            cout << m.asString() << endl;
+            cout << m.toDebugString() << endl;
             cout << "-------------------------------------------------------" << endl;
         }
 
@@ -142,7 +142,7 @@ int main(int argc, char **argv) {
 
         // add NAPTR answer
         auto rr = dns::ResourceRecord();
-        rr.mClass = dns::CLASS_IN;
+        rr.mClass = dns::RecordClass::CLASS_IN;
         rr.mTtl = 1;
         auto rdata = std::make_shared<dns::RDataNAPTR>();
         rdata->mOrder = 1;
@@ -156,7 +156,7 @@ int main(int argc, char **argv) {
 
         // add A answer
         auto rrA = dns::ResourceRecord();
-        rrA.mClass = dns::CLASS_IN;
+        rrA.mClass = dns::RecordClass::CLASS_IN;
         rrA.mTtl = 60;
         auto rdataA = std::make_shared<dns::RDataA>();
         uint8_t ip4[4] = {'\x01', '\x02', '\x03', '\x04' };
@@ -173,7 +173,7 @@ int main(int argc, char **argv) {
 
         if (verbosityLevel >= verbosityAll) {
             cout << "-------------------------------------------------------" << endl;
-            cout << m.asString() << endl;
+            cout << m.toDebugString() << endl;
             cout << "-------------------------------------------------------" << endl;
         }
 

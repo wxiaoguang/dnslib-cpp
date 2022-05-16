@@ -35,11 +35,11 @@ int main(int argc, char** argv) {
 
     cout << "-------------------------------------------------------" << endl;
     cout << "Message prepared for sending:" << endl;
-    cout << m.asString() << endl;
+    cout << m.toDebugString() << endl;
     cout << "-------------------------------------------------------" << endl;
 
     // add NAPTR query
-    auto qs = dns::QuerySection("biloxi.ims", dns::RDATA_NAPTR);
+    auto qs = dns::QuestionSection("biloxi.ims", dns::RecordDataType::RDATA_NAPTR);
     m.questions.emplace_back(std::move(qs));
 
     sockfd = socket(AF_INET, SOCK_DGRAM, 0);

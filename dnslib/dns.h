@@ -17,20 +17,18 @@ const size_t MAX_LABEL_LEN = 63;
 const size_t MAX_DOMAIN_LEN = 255;
 
 // CLASS types
-enum RecordClass {
-    // the Internet
-    CLASS_IN = 1,
-    // the CSNET class (Obsolete)
-    CLASS_CS,
-    // the CHAOS class
-    CLASS_CH,
-    // Hesiod
-    CLASS_HS
+enum class RecordClass : uint16_t {
+    CLASS_None = 0,
+    CLASS_IN,     // the Internet
+    CLASS_CS,     // the CSNET class (Obsolete)
+    CLASS_CH,     // the CHAOS class
+    CLASS_HS,     // Hesiod
 };
 
 // RData types
-enum RecordDataType {
-   // a host address
+enum class RecordDataType : uint16_t {
+    RDATA_None = 0,
+    // a host address
     RDATA_A = 1,
     // an authoritative name server
     RDATA_NS = 2,
@@ -68,11 +66,12 @@ enum RecordDataType {
     RDATA_SRV = 33,
     // naming authority pointer
     RDATA_NAPTR = 35,
-    RDATA_A6 = 0x0026,
-    RDATA_OPT = 0x0029,
-    RDATA_ANY = 0x00ff
+
+    RDATA_OPT = 41,
 };
+
+std::string toString(RecordClass c);
+std::string toString(RecordDataType t);
 
 } // namespace
 #endif	/* _DNS_DNS_H */
-

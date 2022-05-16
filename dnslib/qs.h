@@ -49,23 +49,22 @@ namespace dns {
  * QCLASS          a two octet code that specifies the class of the query.
  *                 For example, the QCLASS field is IN for the Internet.
  */
-class QuerySection
+class QuestionSection
 {
 public:
     std::string mName; // Name of the query
-    RecordDataType mType = RDATA_A; // Type field
-    RecordClass mClass = CLASS_IN; // Class of the query
+    RecordDataType mType = RecordDataType::RDATA_A; // Type field
+    RecordClass mClass = RecordClass::CLASS_IN; // Class of the query
 
     /* Constructor */
-    QuerySection() = default;
-    explicit QuerySection(std::string qName, RecordDataType type = RDATA_A, RecordClass cls = CLASS_IN) :
+    QuestionSection() = default;
+    explicit QuestionSection(std::string qName, RecordDataType type = RecordDataType::RDATA_A, RecordClass cls = RecordClass::CLASS_IN) :
             mName(std::move(qName)), mType(type), mClass(cls) { };
 
     void encode(Buffer &buffer);
 
-    std::string asString();
+    std::string toDebugString();
 };
 
 } // namespace
 #endif	/* _DNS_QS_H */
-

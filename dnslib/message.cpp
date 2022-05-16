@@ -26,10 +26,8 @@ static void decodeResourceRecords(Buffer &buffer, size_t count, std::vector<Reso
     }
 }
 
-bool Message::decode(const uint8_t *buf, size_t size) {
-    if (size > MAX_MSG_LEN) {
-        return false; // Aborting parse of message which exceedes maximal DNS message length.
-    }
+BufferResult Message::decode(const uint8_t *buf, size_t size) {
+    // we do not check (size > MAX_MSG_LEN) at the moment
 
     Buffer buff((uint8_t *) buf, size);
 
@@ -53,7 +51,7 @@ bool Message::decode(const uint8_t *buf, size_t size) {
         auto qType = (RecordDataType) buff.readUint16();
         auto qClass = (RecordClass) buff.readUint16();
 
-        auto qs = QuerySection(qName, qType, qClass);
+        auto qs = QuestionSection(qName, qType, qClass);
         questions.emplace_back(std::move(qs));
     }
 
@@ -63,10 +61,17 @@ bool Message::decode(const uint8_t *buf, size_t size) {
     decodeResourceRecords(buff, arCount, additions);
 
     // 5. check that buffer is consumed
-    return (buff.pos() == buff.size() && !buff.isBroken());
+    auto result = buff.result();
+    if (result != BufferResult::NoError) {
+        return result;
+    }
+    if (buff.pos() != buff.size()) {
+        return BufferResult::InvalidData;
+    }
+    return BufferResult::NoError;
 }
 
-bool Message::encode(uint8_t *buf, size_t bufSize, size_t &encodedSize) {
+BufferResult Message::encode(uint8_t *buf, size_t bufSize, size_t &encodedSize) {
     encodedSize = 0;
     Buffer buff(buf, bufSize);
 
@@ -98,46 +103,23 @@ bool Message::encode(uint8_t *buf, size_t bufSize, size_t &encodedSize) {
         rr.encode(buff);
     }
     encodedSize = buff.pos();
-    return !buff.isBroken();
+    return buff.result();
 }
 
-std::string Message::asString() {
+std::string Message::toDebugString() {
     std::ostringstream text;
-    text << "Header:" << std::endl;
-    text << "ID: " << std::showbase << std::hex << mId << std::endl << std::noshowbase;
-    text << "  fields: [ QR: " << mQr << " opCode: " << mOpCode << " ]" << std::endl;
-    text << "  QDcount: " << questions.size() << std::endl;
-    text << "  ANcount: " << answers.size() << std::endl;
-    text << "  NScount: " << authorities.size() << std::endl;
-    text << "  ARcount: " << additions.size() << std::endl;
-
-    if (!questions.empty()) {
-        text << "Queries:" << std::endl;
-        for (auto &rr : questions) {
-            text << "  " << rr.asString();
-        }
+    text << "DNS Message " << (mQr ? "response" : "request") << ": id=" << mId << ", op=" << mOpCode << ", QD#=" << questions.size() << ", AN#=" << answers.size() << ",  NS#=" << authorities.size() << ", AR#=" << additions.size() << std::endl;
+    for (auto &rr : questions) {
+        text << "  Question: " << rr.toDebugString() << std::endl;
     }
-
-    if (!answers.empty()) {
-        text << "Answers:" << std::endl;
-        for (auto &rr : answers) {
-            text << "  " << rr.asString();
-        }
+    for (auto &rr : answers) {
+        text << "  Answer: " << rr.toDebugString() << std::endl;
     }
-
-    if (!authorities.empty()) {
-        text << "Authorities:" << std::endl;
-        for (auto &rr : authorities) {
-            text << "  " << rr.asString();
-        }
+    for (auto &rr : authorities) {
+        text << "  Authority:" << rr.toDebugString() << std::endl;
     }
-
-    if (!additions.empty()) {
-        text << "Additional:" << std::endl;
-        for (auto &rr : additions) {
-            text << "  " << rr.asString();
-        }
+    for (auto &rr : additions) {
+        text << "  Addition: " << rr.toDebugString() << std::endl;
     }
-
     return text.str();
 }

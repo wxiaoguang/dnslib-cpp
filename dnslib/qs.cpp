@@ -12,15 +12,14 @@
 
 using namespace dns;
 
-std::string QuerySection::asString() {
-    std::ostringstream text;
-    text << "<DNS Question: " << mName << " qtype=" << mType << " qclass=" << mClass << std::endl;
-    return text.str();
+std::string QuestionSection::toDebugString() {
+    auto oss = std::ostringstream();
+    oss <<  toString(mType) <<  " " << mName << " " << toString(mClass);
+    return oss.str();
 }
 
-void QuerySection::encode(Buffer &buffer) {
+void QuestionSection::encode(Buffer &buffer) {
     buffer.writeDomainName(mName);
-    buffer.writeUint16(mType);
-    buffer.writeUint16(mClass);
+    buffer.writeUint16((uint16_t)mType);
+    buffer.writeUint16((uint16_t)mClass);
 }
-
