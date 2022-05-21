@@ -14,7 +14,7 @@ using namespace dns;
 
 std::string QuestionSection::toDebugString() {
     auto oss = std::ostringstream();
-    oss <<  toString(mType) <<  " " << mName << " " << toString(mClass);
+    oss << toString(mType) << " " << mName << " " << toString(mClass);
     return oss.str();
 }
 

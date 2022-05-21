@@ -34,7 +34,6 @@ make
 ## TODO
 
 * [ ] Make the library CMake-friendly (eg: support FetchContent)
-* [ ] Encoding/decoding TXT fields
 
 
 ## Licence

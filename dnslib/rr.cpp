@@ -16,8 +16,9 @@ namespace dns {
 
 std::ostringstream RData::ossDebugString() {
     std::ostringstream oss;
+    // common debug format:  TYPE DOMAIN CLASS TTL more...
     if (record) {
-        oss << toString(getType()) << " " << (record->mDomainName.empty() ? "." : record->mDomainName) << " " << toString(record->mClass) << " " << record->mTtl;
+        oss << toString(getType()) << " " << (record->mName.empty() ? "." : record->mName) << " " << toString(record->mClass) << " " << record->mTtl;
     } else {
         oss << toString(getType()) << " . None 0";
     }
@@ -26,7 +27,7 @@ std::ostringstream RData::ossDebugString() {
 
 /////////// RDataWithName ///////////
 
-void RDataWithName::decode(Buffer &buffer, size_t /*dataSize*/) {
+void RDataWithName::decode(Buffer &buffer, size_t /*dataLen*/) {
     mName = buffer.readDomainName();
 }
 
@@ -43,7 +44,7 @@ std::string RDataWithName::toDebugString() {
 
 /////////// RDataHINFO /////////////////
 
-void RDataHINFO::decode(Buffer &buffer, size_t /*dataSize*/) {
+void RDataHINFO::decode(Buffer &buffer, size_t /*dataLen*/) {
     mCpu = buffer.readCharString();
     mOs = buffer.readCharString();
 }
@@ -62,7 +63,7 @@ std::string RDataHINFO::toDebugString() {
 
 /////////// RDataMINFO /////////////////
 
-void RDataMINFO::decode(Buffer &buffer, size_t /*dataSize*/) {
+void RDataMINFO::decode(Buffer &buffer, size_t /*dataLen*/) {
     mRMailBx = buffer.readDomainName();
     mMailBx = buffer.readDomainName();
 }
@@ -80,7 +81,7 @@ std::string RDataMINFO::toDebugString() {
 
 
 /////////// RDataMX /////////////////
-void RDataMX::decode(Buffer &buffer, size_t /*dataSize*/) {
+void RDataMX::decode(Buffer &buffer, size_t /*dataLen*/) {
     mPreference = buffer.readUint16();
     mExchange = buffer.readDomainName();
 }
@@ -97,11 +98,14 @@ std::string RDataMX::toDebugString() {
 }
 
 /////////// RDataUnknown /////////////////
+RecordType RDataUnknown::getType() {
+    return record->mType;
+}
 
-void RDataUnknown::decode(Buffer &buffer, size_t dataSize) {
-    auto *data = buffer.readBytes(dataSize);
+void RDataUnknown::decode(Buffer &buffer, size_t dataLen) {
+    auto *data = buffer.readBytes(dataLen);
     if (!data) return;
-    mData.assign(data, data + dataSize);
+    mData.assign(data, data + dataLen);
 }
 
 void RDataUnknown::encode(Buffer &buffer) {
@@ -116,7 +120,7 @@ std::string RDataUnknown::toDebugString() {
 
 /////////// RDataSOA /////////////////
 
-void RDataSOA::decode(Buffer &buffer, size_t /*dataSize*/) {
+void RDataSOA::decode(Buffer &buffer, size_t /*dataLen*/) {
     mMName = buffer.readDomainName();
     mRName = buffer.readDomainName();
     mSerial = buffer.readUint32();
@@ -151,31 +155,51 @@ std::string RDataSOA::toDebugString() {
 
 /////////// RDataTXT /////////////////
 
-void RDataTXT::decode(Buffer &buffer, size_t dataSize) {
+void RDataTXT::decode(Buffer &buffer, size_t dataLen) {
     mTexts.clear();
     size_t posStart = buffer.pos();
-    while (!buffer.isBroken() && buffer.pos() - posStart < dataSize) {
+    while (!buffer.isBroken() && buffer.pos() - posStart < dataLen) {
         mTexts.push_back(buffer.readCharString());
     }
 }
 
 void RDataTXT::encode(Buffer &buffer) {
-    for (auto it = mTexts.begin(); it != mTexts.end(); ++it) {
-        buffer.writeCharString(*it);
+    for (auto &txt : mTexts) {
+        buffer.writeCharString(txt);
     }
+}
+
+std::string quoteCharString(const std::string &s) {
+    std::string result;
+    result.push_back('"');
+    char buf4[4];
+    for (auto c : s) {
+        if (c < ' ' || c > '~') {
+            snprintf(buf4, sizeof(buf4), "%03o", c);
+            result.push_back('\\');
+            result += buf4;
+        } else if (c == '\\' || c == '"') {
+            result.push_back('\\');
+            result.push_back(c);
+        } else {
+            result.push_back(c);
+        }
+    }
+    result.push_back('"');
+    return result;
 }
 
 std::string RDataTXT::toDebugString() {
     auto oss = ossDebugString();
     for (auto &txt : mTexts) {
-        oss << " txt=\"" << txt << "\""; // FIXME: escape
+        oss << " " << quoteCharString(txt);
     }
     return oss.str();
 }
 
 /////////// RDataA /////////////////
 
-void RDataA::decode(Buffer &buffer, size_t /*dataSize*/) {
+void RDataA::decode(Buffer &buffer, size_t /*dataLen*/) {
     // get data from buffer
     auto *data = buffer.readBytes(4);
     if (!data) return;
@@ -183,64 +207,57 @@ void RDataA::decode(Buffer &buffer, size_t /*dataSize*/) {
 }
 
 void RDataA::encode(Buffer &buffer) {
-    for (auto i = 0; i < 4; i++) {
-        buffer.writeUint8(mAddr[i]);
-    }
+    buffer.writeBytes(mAddr, 4);
 }
 
 std::string RDataA::toDebugString() {
+    char ipAddr[INET_ADDRSTRLEN];
+    inet_ntop(AF_INET, (in_addr *)mAddr, ipAddr, INET_ADDRSTRLEN);
+
     auto oss = ossDebugString();
-    oss << " addr=" << (uint32_t)mAddr[0] << '.' << (uint32_t)mAddr[1] << '.' << (uint32_t)mAddr[2] << '.' << (uint32_t)mAddr[3];
+    oss << " addr=" << ipAddr;
     return oss.str();
 }
 
 /////////// RDataWKS /////////////////
 
-void RDataWKS::decode(Buffer &buffer, size_t dataSize) {
+void RDataWKS::decode(Buffer &buffer, size_t dataLen) {
     // get ip address
     auto *data = buffer.readBytes(4);
     if (!data) return;
-
     memcpy(mAddr, data, 4);
 
     // get protocol
     mProtocol = buffer.readUint8();
 
     // get bitmap
-    auto mBitmapSize = dataSize - 5;
+    auto mBitmapSize = dataLen - 5;
     data = buffer.readBytes(mBitmapSize);
     if (!data) return;
-
-    mBitmap.resize(mBitmapSize);
-    std::memcpy(mBitmap.data(), data, mBitmapSize);
+    mBitmap.assign(data, data+mBitmapSize);
 }
 
 void RDataWKS::encode(Buffer &buffer) {
-    // put ip address
-    for (auto i = 0; i < 4; i++) {
-        buffer.writeUint8(mAddr[i]);
-    }
-
-    // put protocol
+    buffer.writeBytes(mAddr, 4);
     buffer.writeUint8(mProtocol);
-
-    // put bitmap
-    if (!mBitmap.empty())
+    if (!mBitmap.empty()) {
         buffer.writeBytes(mBitmap.data(), mBitmap.size());
+    }
 }
 
 std::string RDataWKS::toDebugString() {
+    char ipAddr[INET_ADDRSTRLEN];
+    inet_ntop(AF_INET, (in_addr *)mAddr, ipAddr, INET_ADDRSTRLEN);
+
     auto oss = ossDebugString();
-    oss << " addr="
-        << (uint32_t) mAddr[0] << '.' << (uint32_t) mAddr[1] << '.' << (uint32_t) mAddr[2] << '.' << (uint32_t) mAddr[3]
-        << " protocol=" << (uint32_t) mProtocol << " bitmap-size=" << mBitmap.size();
+    oss << " addr=" << ipAddr << " protocol=" << (uint32_t) mProtocol << " bitmap-size=" << mBitmap.size();
     return oss.str();
 }
 
 
 /////////// RDataAAAA /////////////////
 
-void RDataAAAA::decode(Buffer &buffer, size_t /*dataSize*/) {
+void RDataAAAA::decode(Buffer &buffer, size_t /*dataLen*/) {
     // get data from buffer
     auto *data = buffer.readBytes(16);
     if (!data) return;
@@ -249,31 +266,22 @@ void RDataAAAA::decode(Buffer &buffer, size_t /*dataSize*/) {
 }
 
 void RDataAAAA::encode(Buffer &buffer) {
-    for (auto i = 0; i < 16; i++) {
-        buffer.writeUint8(mAddr[i]);
-    }
+    buffer.writeBytes(mAddr, 16);
 }
 
 std::string RDataAAAA::toDebugString() {
+    char ipAddr[INET6_ADDRSTRLEN];
+    inet_ntop(AF_INET6, (in_addr *)mAddr, ipAddr, INET6_ADDRSTRLEN);
+
     auto oss = ossDebugString();
-    oss << " addr=";
-    char hexbuf[3];
-    for (auto i = 0; i < 16; i += 2) {
-        if (i > 0) {
-            oss << ':';
-        }
-        sprintf(hexbuf, "%02x", mAddr[i]);
-        oss << hexbuf;
-        sprintf(hexbuf, "%02x", mAddr[i+1]);
-        oss << hexbuf;
-    }
+    oss << " addr=" << ipAddr;
     return oss.str();
 }
 
 
 /////////// RDataNAPTR /////////////////
 
-void RDataNAPTR::decode(Buffer &buffer, size_t /*dataSize*/) {
+void RDataNAPTR::decode(Buffer &buffer, size_t /*dataLen*/) {
     mOrder = buffer.readUint16();
     mPreference = buffer.readUint16();
     mFlags = buffer.readCharString();
@@ -293,35 +301,28 @@ void RDataNAPTR::encode(Buffer &buffer) {
 
 std::string RDataNAPTR::toDebugString() {
     auto oss = ossDebugString();
-    oss << "type=NAPTR, order=" << mOrder << " preference=" << mPreference << " flags=" << mFlags << " services=" << mServices << " regexp=" << mRegExp << " replacement=" << mReplacement;
+    oss << " order=" << mOrder << " preference=" << mPreference << " flags=" << mFlags << " services=" << mServices << " regexp=" << mRegExp << " replacement=" << mReplacement;
     return oss.str();
 }
 
 /////////// RDataSRV /////////////////
-void RDataSRV::decode(Buffer &buffer, size_t dataSize) {
+void RDataSRV::decode(Buffer &buffer, size_t /*dataLen*/) {
     mPriority = buffer.readUint16();
     mWeight = buffer.readUint16();
     mPort = buffer.readUint16();
-
-    size_t posStart = buffer.pos();
-    while (!buffer.isBroken() && buffer.pos() - posStart < dataSize - 6) {
-        mTarget.append(buffer.readCharString());
-        mTarget.append(".");
-    }
-    if (!mTarget.empty()) mTarget.pop_back();
-    if (!mTarget.empty()) mTarget.pop_back();
+    mTarget = buffer.readDomainName();
 }
 
 void RDataSRV::encode(Buffer &buffer) {
     buffer.writeUint16(mPriority);
     buffer.writeUint16(mWeight);
     buffer.writeUint16(mPort);
-    buffer.writeCharString(mTarget);
+    buffer.writeDomainName(mTarget);
 }
 
 std::string RDataSRV::toDebugString() {
     auto oss = ossDebugString();
-    oss << "type=SRV, priority=" << mPriority << " weight=" << mWeight << " port=" << mPort << " target=" << mTarget;
+    oss << " priority=" << mPriority << " weight=" << mWeight << " port=" << mPort << " target=" << mTarget;
     return oss.str();
 }
 
@@ -344,7 +345,7 @@ OPT TTL
 2: | DO|                           Z                               |
    +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
  */
-void RDataOPT::decode(Buffer &buffer, size_t /*dataSize*/) {
+void RDataOPT::decode(Buffer &buffer, size_t /*dataLen*/) {
     auto dataLen = buffer.readUint16();
     auto bytes = buffer.readBytes(dataLen);
     if (bytes) {
@@ -367,70 +368,70 @@ std::string RDataOPT::toDebugString() {
 /////////// ResourceRecord ////////////
 
 void ResourceRecord::decode(Buffer &buffer) {
-    mDomainName = buffer.readDomainName();
-    mType = (RecordDataType)buffer.readUint16();
+    mName = buffer.readDomainName();
+    mType = (RecordType)buffer.readUint16();
 
-    // some data type (like OPT) will use Class/Ttl as other meanings
+    // some pseudo-record type (like OPT) will use Class/Ttl as other meanings
     mClass = (RecordClass) buffer.readUint16();
     mTtl = buffer.readUint32();
 
-    auto rDataSize = buffer.readUint16();
+    auto dataLen = buffer.readUint16();
     switch (mType) {
-        case RecordDataType::RDATA_CNAME:
+        case RecordType::RDATA_CNAME:
             mRData = std::make_shared<RDataCNAME>();
             break;
-        case RecordDataType::RDATA_HINFO:
+        case RecordType::RDATA_HINFO:
             mRData = std::make_shared<RDataHINFO>();
             break;
-        case RecordDataType::RDATA_MB:
+        case RecordType::RDATA_MB:
             mRData = std::make_shared<RDataMB>();
             break;
-        case RecordDataType::RDATA_MD:
+        case RecordType::RDATA_MD:
             mRData = std::make_shared<RDataMD>();
             break;
-        case RecordDataType::RDATA_MF:
+        case RecordType::RDATA_MF:
             mRData = std::make_shared<RDataMF>();
             break;
-        case RecordDataType::RDATA_MG:
+        case RecordType::RDATA_MG:
             mRData = std::make_shared<RDataMG>();
             break;
-        case RecordDataType::RDATA_MINFO:
+        case RecordType::RDATA_MINFO:
             mRData = std::make_shared<RDataMINFO>();
             break;
-        case RecordDataType::RDATA_MR:
+        case RecordType::RDATA_MR:
             mRData = std::make_shared<RDataMR>();
             break;
-        case RecordDataType::RDATA_MX:
+        case RecordType::RDATA_MX:
             mRData = std::make_shared<RDataMX>();
             break;
-        case RecordDataType::RDATA_NS:
+        case RecordType::RDATA_NS:
             mRData = std::make_shared<RDataNS>();
             break;
-        case RecordDataType::RDATA_PTR:
+        case RecordType::RDATA_PTR:
             mRData = std::make_shared<RDataPTR>();
             break;
-        case RecordDataType::RDATA_SOA:
+        case RecordType::RDATA_SOA:
             mRData = std::make_shared<RDataSOA>();
             break;
-        case RecordDataType::RDATA_TXT:
+        case RecordType::RDATA_TXT:
             mRData = std::make_shared<RDataTXT>();
             break;
-        case RecordDataType::RDATA_A:
+        case RecordType::RDATA_A:
             mRData = std::make_shared<RDataA>();
             break;
-        case RecordDataType::RDATA_WKS:
+        case RecordType::RDATA_WKS:
             mRData = std::make_shared<RDataWKS>();
             break;
-        case RecordDataType::RDATA_AAAA:
+        case RecordType::RDATA_AAAA:
             mRData = std::make_shared<RDataAAAA>();
             break;
-        case RecordDataType::RDATA_NAPTR:
+        case RecordType::RDATA_NAPTR:
             mRData = std::make_shared<RDataNAPTR>();
             break;
-        case RecordDataType::RDATA_SRV:
+        case RecordType::RDATA_SRV:
             mRData = std::make_shared<RDataSRV>();
             break;
-        case RecordDataType::RDATA_OPT:
+        case RecordType::RDATA_OPT:
             mRData = std::make_shared<RDataOPT>();
             break;
         default:
@@ -439,10 +440,10 @@ void ResourceRecord::decode(Buffer &buffer) {
 
     mRData->record = this;
 
-    // RData can refer to the offset after the rDataSize in buffer
-    if (rDataSize) {
-        auto expectedEndPos = buffer.pos() + rDataSize;
-        mRData->decode(buffer, rDataSize);
+    // RData can refer up to the offset after the dataLen in buffer
+    if (dataLen) {
+        auto expectedEndPos = buffer.pos() + dataLen;
+        mRData->decode(buffer, dataLen);
         if (buffer.pos() != expectedEndPos) {
             buffer.markBroken(BufferResult::InvalidData);
         }
@@ -450,9 +451,9 @@ void ResourceRecord::decode(Buffer &buffer) {
 }
 
 void ResourceRecord::encode(Buffer &buffer) {
-    buffer.writeDomainName(mDomainName);
+    buffer.writeDomainName(mName);
     buffer.writeUint16((uint16_t)mRData->getType());
-    // TODO: some data type (like OPT) will use Class/Ttl as other meanings
+    // TODO: some pseudo-record type (like OPT) will use Class/Ttl as other meanings
     buffer.writeUint16((uint16_t)mClass);
     buffer.writeUint32(mTtl);
     // save position of buffer for later use (write length of RData part)
@@ -462,10 +463,10 @@ void ResourceRecord::encode(Buffer &buffer) {
     if (mRData) {
         mRData->encode(buffer);
         // sub 2 because two bytes for RData length are not part of RData block
-        auto rDataSize = buffer.pos() - bufferPosRDataLength - 2;
+        auto dataLen = buffer.pos() - bufferPosRDataLength - 2;
         size_t bufferLastPos = buffer.pos();
         buffer.seek(bufferPosRDataLength);
-        buffer.writeUint16(rDataSize); // overwrite 0 with actual size of RData
+        buffer.writeUint16(dataLen); // overwrite 0 with actual size of RData
         buffer.seek(bufferLastPos);
     }
 }
@@ -487,54 +488,54 @@ std::string toString(RecordClass c) {
         case RecordClass::CLASS_HS:
             return "HS";
         default:
-            return "Class(" + std::to_string((int)c) + ")";
+            return "CLASS" + std::to_string((int)c);
     }
 }
 
-std::string toString(RecordDataType t) {
+std::string toString(RecordType t) {
     switch (t) {
-        case RecordDataType::RDATA_None:
+        case RecordType::RDATA_None:
             return "None";
-        case RecordDataType::RDATA_CNAME:
+        case RecordType::RDATA_CNAME:
             return "CNAME";
-        case RecordDataType::RDATA_HINFO:
+        case RecordType::RDATA_HINFO:
             return "HINFO";
-        case RecordDataType::RDATA_MB:
+        case RecordType::RDATA_MB:
             return "MB";
-        case RecordDataType::RDATA_MD:
+        case RecordType::RDATA_MD:
             return "MD";
-        case RecordDataType::RDATA_MF:
+        case RecordType::RDATA_MF:
             return "MF";
-        case RecordDataType::RDATA_MG:
+        case RecordType::RDATA_MG:
             return "MG";
-        case RecordDataType::RDATA_MINFO:
+        case RecordType::RDATA_MINFO:
             return "MINFO";
-        case RecordDataType::RDATA_MR:
+        case RecordType::RDATA_MR:
             return "MR";
-        case RecordDataType::RDATA_MX:
+        case RecordType::RDATA_MX:
             return "MX";
-        case RecordDataType::RDATA_NS:
+        case RecordType::RDATA_NS:
             return "NS";
-        case RecordDataType::RDATA_PTR:
+        case RecordType::RDATA_PTR:
             return "PTR";
-        case RecordDataType::RDATA_SOA:
+        case RecordType::RDATA_SOA:
             return "SOA";
-        case RecordDataType::RDATA_TXT:
+        case RecordType::RDATA_TXT:
             return "TXT";
-        case RecordDataType::RDATA_A:
+        case RecordType::RDATA_A:
             return "A";
-        case RecordDataType::RDATA_WKS:
+        case RecordType::RDATA_WKS:
             return "WKS";
-        case RecordDataType::RDATA_AAAA:
+        case RecordType::RDATA_AAAA:
             return "AAAA";
-        case RecordDataType::RDATA_NAPTR:
+        case RecordType::RDATA_NAPTR:
             return "NAPTR";
-        case RecordDataType::RDATA_SRV:
+        case RecordType::RDATA_SRV:
             return "SRV";
-        case RecordDataType::RDATA_OPT:
+        case RecordType::RDATA_OPT:
             return "OPT";
         default:
-            return "Type(" + std::to_string((int)t) + ")";
+            return "TYPE" + std::to_string((int)t);
     }
 }
 

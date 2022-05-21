@@ -48,7 +48,7 @@ BufferResult Message::decode(const uint8_t *buf, size_t size) {
     // 3. read Question Sections
     for (size_t i = 0; i < qdCount; i++) {
         std::string qName = buff.readDomainName();
-        auto qType = (RecordDataType) buff.readUint16();
+        auto qType = (RecordType) buff.readUint16();
         auto qClass = (RecordClass) buff.readUint16();
 
         auto qs = QuestionSection(qName, qType, qClass);

@@ -26,52 +26,41 @@ enum class RecordClass : uint16_t {
 };
 
 // RData types
-enum class RecordDataType : uint16_t {
+enum class RecordType : uint16_t {
     RDATA_None = 0,
-    // a host address
-    RDATA_A = 1,
-    // an authoritative name server
-    RDATA_NS = 2,
-    // a mail destination (Obsolete - use MX)
-    RDATA_MD = 3,
-    // a mail forwarder (Obsolete - use MX)
-    RDATA_MF = 4,
-    // the canonical name for an alias
-    RDATA_CNAME = 5,
-    // marks the start of a zone of authority
-    RDATA_SOA = 6,
-    // a mailbox domain name (EXPERIMENTAL)
-    RDATA_MB = 7,
-    // a mail group member (EXPERIMENTAL)
-    RDATA_MG = 8,
-    // a mail rename domain name (EXPERIMENTAL)
-    RDATA_MR = 9,
-    // a null RR (EXPERIMENTAL)
-    RDATA_NULL = 10,
-    // a well known service description
-    RDATA_WKS = 11,
-    // a domain name pointer
-    RDATA_PTR = 12,
-    // host information
-    RDATA_HINFO = 13,
-    // mailbox or mail list information
-    RDATA_MINFO = 14,
-    // mail exchange
-    RDATA_MX = 15,
-    // text strings
-    RDATA_TXT = 16,
-    // IPv6 address
-    RDATA_AAAA = 28,
-    // service record specifies
-    RDATA_SRV = 33,
-    // naming authority pointer
-    RDATA_NAPTR = 35,
 
-    RDATA_OPT = 41,
+    RDATA_A = 1, // IPv4 address
+    RDATA_NS = 2, // authoritative name server
+
+    RDATA_MD = 3, // mail destination (Obsolete - use MX)
+    RDATA_MF = 4, // mail forwarder (Obsolete - use MX)
+
+    RDATA_CNAME = 5, // canonical name for an alias
+    RDATA_SOA = 6, // marks the start of a zone of authority
+
+    RDATA_MB = 7, // mailbox domain name (Obsolete)
+    RDATA_MG = 8, // mail group member (Obsolete)
+    RDATA_MR = 9, // mail rename domain name (Obsolete)
+    RDATA_NULL = 10, // null record (Obsolete)
+    RDATA_WKS = 11, // well known service description (Obsolete)
+
+    RDATA_PTR = 12, // domain name pointer
+    RDATA_HINFO = 13, // host information
+
+    RDATA_MINFO = 14, // mailbox or mail list information (Obsolete)
+
+    RDATA_MX = 15, // mail exchange
+    RDATA_TXT = 16, // text strings
+    RDATA_AAAA = 28, // IPv6 address
+    RDATA_SRV = 33, // service record specifies
+    RDATA_NAPTR = 35, // naming authority pointer
+
+    RDATA_OPT = 41, // pseudo-record to support EDNS
+    RDATA_ANY = 255,
 };
 
 std::string toString(RecordClass c);
-std::string toString(RecordDataType t);
+std::string toString(RecordType t);
 
 } // namespace
 #endif	/* _DNS_DNS_H */

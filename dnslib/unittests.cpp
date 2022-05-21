@@ -103,87 +103,89 @@ static void testCNAME_MB_MD_MF_MG_MR_NS_PTR() {
     rCNAME.decode(buff, wireDataSize);
     TEST_ASSERT(!buff.isBroken());
     TEST_ASSERT(rCNAME.mName == "www.google.com");
-    TEST_ASSERT(rCNAME.getType() == dns::RecordDataType::RDATA_CNAME);
+    TEST_ASSERT(rCNAME.getType() == dns::RecordType::RDATA_CNAME);
 
     dns::RDataMB rMB;
     buff.seek(0);
     rMB.decode(buff, wireDataSize);
     TEST_ASSERT(!buff.isBroken());
     TEST_ASSERT(rMB.mName == "www.google.com");
-    TEST_ASSERT(rMB.getType() == dns::RecordDataType::RDATA_MB);
+    TEST_ASSERT(rMB.getType() == dns::RecordType::RDATA_MB);
 
     dns::RDataMD rMD;
     buff.seek(0);
     rMD.decode(buff, wireDataSize);
     TEST_ASSERT(!buff.isBroken());
     TEST_ASSERT(rMD.mName == "www.google.com");
-    TEST_ASSERT(rMD.getType() == dns::RecordDataType::RDATA_MD);
+    TEST_ASSERT(rMD.getType() == dns::RecordType::RDATA_MD);
 
     dns::RDataMF rMF;
     buff.seek(0);
     rMF.decode(buff, wireDataSize);
     TEST_ASSERT(!buff.isBroken());
     TEST_ASSERT(rMF.mName == "www.google.com");
-    TEST_ASSERT(rMF.getType() == dns::RecordDataType::RDATA_MF);
+    TEST_ASSERT(rMF.getType() == dns::RecordType::RDATA_MF);
 
     dns::RDataMG rMG;
     buff.seek(0);
     rMG.decode(buff, wireDataSize);
     TEST_ASSERT(!buff.isBroken());
     TEST_ASSERT(rMG.mName == "www.google.com");
-    TEST_ASSERT(rMG.getType() == dns::RecordDataType::RDATA_MG);
+    TEST_ASSERT(rMG.getType() == dns::RecordType::RDATA_MG);
 
     dns::RDataMR rMR;
     buff.seek(0);
     rMR.decode(buff, wireDataSize);
     TEST_ASSERT(!buff.isBroken());
     TEST_ASSERT(rMR.mName == "www.google.com");
-    TEST_ASSERT(rMR.getType() == dns::RecordDataType::RDATA_MR);
+    TEST_ASSERT(rMR.getType() == dns::RecordType::RDATA_MR);
 
     dns::RDataNS rNS;
     buff.seek(0);
     rNS.decode(buff, wireDataSize);
     TEST_ASSERT(!buff.isBroken());
     TEST_ASSERT(rNS.mName == "www.google.com");
-    TEST_ASSERT(rNS.getType() == dns::RecordDataType::RDATA_NS);
+    TEST_ASSERT(rNS.getType() == dns::RecordType::RDATA_NS);
 
     dns::RDataPTR rPTR;
     buff.seek(0);
     rPTR.decode(buff, wireDataSize);
     TEST_ASSERT(!buff.isBroken());
     TEST_ASSERT(rPTR.mName == "www.google.com");
-    TEST_ASSERT(rPTR.getType() == dns::RecordDataType::RDATA_PTR);
+    TEST_ASSERT(rPTR.getType() == dns::RecordType::RDATA_PTR);
 }
 
 static void testHINFO() {
     dns::RDataHINFO r;
-    TEST_ASSERT(r.getType() == dns::RecordDataType::RDATA_HINFO);
+    TEST_ASSERT(r.getType() == dns::RecordType::RDATA_HINFO);
 }
 
 
 static void testMINFO() {
     dns::RDataMINFO r;
-    TEST_ASSERT(r.getType() == dns::RecordDataType::RDATA_MINFO);
+    TEST_ASSERT(r.getType() == dns::RecordType::RDATA_MINFO);
 }
 
 static void testMX() {
     dns::RDataMX r;
-    TEST_ASSERT(r.getType() == dns::RecordDataType::RDATA_MX);
+    TEST_ASSERT(r.getType() == dns::RecordType::RDATA_MX);
 }
 
-static void testNULL() {
-    dns::RDataUnknown r;
-    TEST_ASSERT(r.getType() == dns::RecordDataType::RDATA_NULL);
+static void testUnknown() {
+    dns::ResourceRecord rr;
+    rr.mType = dns::RecordType(0x1234);
+    rr.setRData(std::make_shared<dns::RDataUnknown>());
+    TEST_ASSERT(rr.getRData<dns::RDataUnknown>()->getType() == dns::RecordType(0x1234));
 }
 
 static void testSOA() {
     dns::RDataSOA r;
-    TEST_ASSERT(r.getType() == dns::RecordDataType::RDATA_SOA);
+    TEST_ASSERT(r.getType() == dns::RecordType::RDATA_SOA);
 }
 
 static void testTXT() {
     dns::RDataTXT r;
-    TEST_ASSERT(r.getType() == dns::RecordDataType::RDATA_TXT);
+    TEST_ASSERT(r.getType() == dns::RecordType::RDATA_TXT);
 
     char txtData[] = {'\x02', '\x65', '\x65', '\x00'};
     dns::Buffer b1(txtData, sizeof(txtData));
@@ -194,11 +196,20 @@ static void testTXT() {
     dns::Buffer b2(txtData2, sizeof(txtData2));
     r.decode(b2, sizeof(txtData2));
     TEST_ASSERT(!b2.isBroken());
+
+    char d3[] = "\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00\x00\x0b\x74\x65\x73\x74\x2d\x64\x6f\x6d\x61\x69\x6e\x00\x00\x10\x00\x01\x00\x00\x00\x00\x00\x0c\x03\x61\x20\x62\x03\x61\x22\x62\x03\x61\xff\x62";
+    dns::Message m3;
+    TEST_ASSERT(m3.decode(d3, sizeof(d3)-1) == dns::BufferResult::NoError);
+    auto t3 = m3.answers[0].getRData<dns::RDataTXT>();
+    TEST_ASSERT_EQUAL("a b", t3->mTexts[0]);
+    TEST_ASSERT_EQUAL("a\"b", t3->mTexts[1]);
+    TEST_ASSERT_EQUAL("a\xff""b", t3->mTexts[2]);
+    TEST_ASSERT_EQUAL(R"(TXT test-domain IN 0 "a b" "a\"b" "a\377b")", t3->toDebugString());
 }
 
 static void testRDataA() {
     dns::RDataA r;
-    TEST_ASSERT(r.getType() == dns::RecordDataType::RDATA_A);
+    TEST_ASSERT(r.getType() == dns::RecordType::RDATA_A);
 
     char addr[] = {'\x01', '\x02', '\x03', '\x04'};
     dns::Buffer b(addr, sizeof(addr));
@@ -213,11 +224,12 @@ static void testRDataA() {
 
     b.seek(0);
     r.encode(b);
+    TEST_ASSERT(!b.isBroken());
 }
 
 static void testWKS() {
     dns::RDataWKS r;
-    TEST_ASSERT(r.getType() == dns::RecordDataType::RDATA_WKS);
+    TEST_ASSERT(r.getType() == dns::RecordType::RDATA_WKS);
 
     char wksData[] = {'\x01', '\x02', '\x03', '\x04', '\xaa', '\xff', '\xef'};
     dns::Buffer b(wksData, sizeof(wksData));
@@ -229,16 +241,19 @@ static void testWKS() {
 
     b.seek(0);
     r.encode(b);
+    TEST_ASSERT(!b.isBroken());
 }
 
 static void testRDataAAAA() {
     dns::RDataAAAA r;
-    TEST_ASSERT(r.getType() == dns::RecordDataType::RDATA_AAAA);
+    TEST_ASSERT(r.getType() == dns::RecordType::RDATA_AAAA);
 
     char addr[] = {'\x01', '\x02', '\x03', '\x04', '\x05', '\x06', '\x07', '\x08', '\x09', '\x0a', '\x0b', '\x0c', '\x0d', '\x0e', '\x0f', '\x10'};
     dns::Buffer b(addr, sizeof(addr));
     r.decode(b, sizeof(addr));
     TEST_ASSERT(!b.isBroken());
+
+    TEST_ASSERT_EQUAL("AAAA . None 0 addr=102:304:506:708:90a:b0c:d0e:f10", r.toDebugString());
 
     uint8_t *addr2 = r.getAddress();
     for (auto i = 0; i < 16; i++)
@@ -246,6 +261,7 @@ static void testRDataAAAA() {
 
     b.seek(0);
     r.encode(b);
+    TEST_ASSERT(!b.isBroken());
 }
 
 static void testNAPTR() {
@@ -267,7 +283,7 @@ static void testSRV() {
     dns::RDataSRV r;
     char dasrv[] = "\x00\x14\x00\x00\x14\x95\x04\x61\x6c\x74\x32\x0b\x78\x6d\x70\x70\x2d\x73\x65\x72\x76\x65\x72\x01\x6c\x06\x67\x6f\x6f\x67\x6c\x65\x03\x63\x6f\x6d\x00";
 
-    TEST_ASSERT(r.getType() == dns::RecordDataType::RDATA_SRV);
+    TEST_ASSERT(r.getType() == dns::RecordType::RDATA_SRV);
     dns::Buffer b(dasrv, sizeof(dasrv) - 1);
     r.decode(b, sizeof(dasrv) - 1);
     TEST_ASSERT(!b.isBroken());
@@ -304,7 +320,7 @@ static void testPacket() {
     TEST_ASSERT(m.additions.empty());
 
     auto &qs = m.questions;
-    TEST_ASSERT(qs[0].mType == dns::RecordDataType::RDATA_A);
+    TEST_ASSERT(qs[0].mType == dns::RecordType::RDATA_A);
     TEST_ASSERT(qs[0].mClass == dns::RecordClass::CLASS_IN);
     TEST_ASSERT(qs[0].mName == "www.google.com");
 
@@ -371,8 +387,7 @@ static void testCreatePacket() {
 
     size_t mesgSize;
     char mesg[2000];
-    answer.encode(mesg, 2000, mesgSize);
-
+    TEST_ASSERT(answer.encode(mesg, 2000, mesgSize) == dns::BufferResult::NoError);
     // todo check buffer
 }
 
@@ -388,7 +403,7 @@ int main() {
     TEST(testHINFO);
     TEST(testMINFO);
     TEST(testMX);
-    TEST(testNULL);
+    TEST(testUnknown);
     TEST(testSOA);
     TEST(testTXT);
     TEST(testWKS);

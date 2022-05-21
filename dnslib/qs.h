@@ -53,12 +53,12 @@ class QuestionSection
 {
 public:
     std::string mName; // Name of the query
-    RecordDataType mType = RecordDataType::RDATA_A; // Type field
+    RecordType mType = RecordType::RDATA_A; // Type field
     RecordClass mClass = RecordClass::CLASS_IN; // Class of the query
 
     /* Constructor */
     QuestionSection() = default;
-    explicit QuestionSection(std::string qName, RecordDataType type = RecordDataType::RDATA_A, RecordClass cls = RecordClass::CLASS_IN) :
+    explicit QuestionSection(std::string qName, RecordType type = RecordType::RDATA_A, RecordClass cls = RecordClass::CLASS_IN) :
             mName(std::move(qName)), mType(type), mClass(cls) { };
 
     void encode(Buffer &buffer);
