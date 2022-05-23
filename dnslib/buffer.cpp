@@ -158,6 +158,20 @@ uint8_t *Buffer::readBytes(size_t count) {
     return movePtr(bufPtr + count);
 }
 
+bool Buffer::readBytes(size_t count, std::vector<uint8_t> &out) {
+    auto p = readBytes(count);
+    if (!p) return false;
+    out.assign(p, p+count);
+    return true;
+}
+
+bool Buffer::readBytes(size_t count, uint8_t *out) {
+    auto p = readBytes(count);
+    if (!p) return false;
+    memcpy(out, p, count);
+    return true;
+}
+
 void Buffer::writeBytes(const uint8_t *data, size_t count) {
     if (count == 0) {
         return; // maybe something wrong

@@ -6,8 +6,6 @@
 
 #include <iostream>
 #include <sstream>
-#include <cstring>
-#include <iomanip>
 
 #include "buffer.h"
 #include "rr.h"
@@ -103,9 +101,7 @@ RecordType RDataUnknown::getType() {
 }
 
 void RDataUnknown::decode(Buffer &buffer, size_t dataLen) {
-    auto *data = buffer.readBytes(dataLen);
-    if (!data) return;
-    mData.assign(data, data + dataLen);
+    buffer.readBytes(dataLen, mData);
 }
 
 void RDataUnknown::encode(Buffer &buffer) {
@@ -200,10 +196,7 @@ std::string RDataTXT::toDebugString() {
 /////////// RDataA /////////////////
 
 void RDataA::decode(Buffer &buffer, size_t /*dataLen*/) {
-    // get data from buffer
-    auto *data = buffer.readBytes(4);
-    if (!data) return;
-    memcpy(mAddr, data, 4);
+    buffer.readBytes(4, mAddr);
 }
 
 void RDataA::encode(Buffer &buffer) {
@@ -223,18 +216,14 @@ std::string RDataA::toDebugString() {
 
 void RDataWKS::decode(Buffer &buffer, size_t dataLen) {
     // get ip address
-    auto *data = buffer.readBytes(4);
-    if (!data) return;
-    memcpy(mAddr, data, 4);
+    buffer.readBytes(4, mAddr);
 
     // get protocol
     mProtocol = buffer.readUint8();
 
     // get bitmap
-    auto mBitmapSize = dataLen - 5;
-    data = buffer.readBytes(mBitmapSize);
-    if (!data) return;
-    mBitmap.assign(data, data+mBitmapSize);
+    auto bitmapSize = dataLen - 5;
+    buffer.readBytes(bitmapSize, mBitmap);
 }
 
 void RDataWKS::encode(Buffer &buffer) {
@@ -258,11 +247,7 @@ std::string RDataWKS::toDebugString() {
 /////////// RDataAAAA /////////////////
 
 void RDataAAAA::decode(Buffer &buffer, size_t /*dataLen*/) {
-    // get data from buffer
-    auto *data = buffer.readBytes(16);
-    if (!data) return;
-
-    memcpy(mAddr, data, 16);
+    buffer.readBytes(16, mAddr);
 }
 
 void RDataAAAA::encode(Buffer &buffer) {
@@ -347,11 +332,7 @@ OPT TTL
  */
 void RDataOPT::decode(Buffer &buffer, size_t /*dataLen*/) {
     auto dataLen = buffer.readUint16();
-    auto bytes = buffer.readBytes(dataLen);
-    if (bytes) {
-        mData.resize(dataLen);
-        memcpy(mData.data(), bytes, dataLen);
-    }
+    buffer.readBytes(dataLen, mData);
 }
 
 void RDataOPT::encode(Buffer &buffer) {

@@ -61,6 +61,8 @@ public:
     void writeUint32(uint32_t value);
 
     uint8_t *readBytes(size_t count);
+    bool readBytes(size_t count, std::vector<uint8_t> &out);
+    bool readBytes(size_t count, uint8_t *out);
     void writeBytes(const uint8_t *data, size_t count);
 
     // read & write <character-string> (according to RFC 1035) from buffer

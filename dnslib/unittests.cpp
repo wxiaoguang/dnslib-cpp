@@ -10,6 +10,10 @@
 #include "rr.h"
 #include "buffer.h"
 
+#ifdef _WIN32
+#pragma comment(lib, "ws2_32.lib")
+#endif
+
 static int assertPass = 0, assertFail = 0;
 
 #define TEST_ASSERT(exp) do { if ((exp)) { assertPass++; } else { assertFail++; std::cout << #exp << " failed" << std::endl; } } while(0)
@@ -204,7 +208,7 @@ static void testTXT() {
     TEST_ASSERT_EQUAL("a b", t3->mTexts[0]);
     TEST_ASSERT_EQUAL("a\"b", t3->mTexts[1]);
     TEST_ASSERT_EQUAL("a\xff""b", t3->mTexts[2]);
-    TEST_ASSERT_EQUAL(R"(TXT test-domain IN 0 "a b" "a\"b" "a\377b")", t3->toDebugString());
+    TEST_ASSERT_EQUAL("TXT test-domain IN 0 \"a b\" \"a\\\"b\" \"a\\377b\"", t3->toDebugString());
 }
 
 static void testRDataA() {
