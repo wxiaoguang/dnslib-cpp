@@ -330,13 +330,11 @@ OPT TTL
 2: | DO|                           Z                               |
    +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
  */
-void RDataOPT::decode(Buffer &buffer, size_t /*dataLen*/) {
-    auto dataLen = buffer.readUint16();
+void RDataOPT::decode(Buffer &buffer, size_t dataLen) {
     buffer.readBytes(dataLen, mData);
 }
 
 void RDataOPT::encode(Buffer &buffer) {
-    buffer.writeUint16(mData.size());
     buffer.writeBytes(mData.data(), mData.size());
 }
 
