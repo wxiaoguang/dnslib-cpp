@@ -33,13 +33,16 @@ BufferResult Message::decode(const uint8_t *buf, size_t size) {
 
     // 2. read header
     mId = buff.readUint16();
-    uint32_t fields = buff.readUint16();
+
+    uint16_t fields = buff.readUint16();
     mQr = (fields >> 15) & 1;
     mOpCode = (fields >> 11) & 15;
     mAA = (fields >> 10) & 1;
     mTC = (fields >> 9) & 1;
     mRD = (fields >> 8) & 1;
     mRA = (fields >> 7) & 1;
+    mRCode = fields & 15;
+
     size_t qdCount = buff.readUint16();
     size_t anCount = buff.readUint16();
     size_t nsCount = buff.readUint16();
@@ -77,14 +80,16 @@ BufferResult Message::encode(uint8_t *buf, size_t bufSize, size_t &encodedSize) 
 
     // encode header
     buff.writeUint16(mId);
+
     uint16_t fields = ((mQr & 1) << 15);
-    fields += ((mOpCode & 15) << 11);
-    fields += ((mAA & 1) << 10);
-    fields += ((mTC & 1) << 9);
-    fields += ((mRD & 1) << 8);
-    fields += ((mRA & 1) << 7);
-    fields += ((mRCode & 15));
+    fields |= ((mOpCode & 15) << 11);
+    fields |= ((mAA & 1) << 10);
+    fields |= ((mTC & 1) << 9);
+    fields |= ((mRD & 1) << 8);
+    fields |= ((mRA & 1) << 7);
+    fields |= ((mRCode & 15));
     buff.writeUint16(fields);
+
     buff.writeUint16(questions.size());
     buff.writeUint16(answers.size());
     buff.writeUint16(authorities.size());

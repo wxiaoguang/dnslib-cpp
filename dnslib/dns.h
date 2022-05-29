@@ -16,47 +16,58 @@ const size_t MAX_MSG_LEN = 512;
 const size_t MAX_LABEL_LEN = 63;
 const size_t MAX_DOMAIN_LEN = 255;
 
-// CLASS types
-enum class RecordClass : uint16_t {
-    CLASS_None = 0,
-    CLASS_IN,     // the Internet
-    CLASS_CS,     // the CSNET class (Obsolete)
-    CLASS_CH,     // the CHAOS class
-    CLASS_HS,     // Hesiod
+// RCode types, use uint16_t to match the type of Message::mRCode
+enum class ResponseCode : uint16_t {
+    NOERROR = 0,
+    FORMERR,
+    SERVFAIL,
+    NXDOMAIN,
+    NOTIMP,
+    REFUSED,
+    // 6-15 reserved for future use
 };
 
-// RData types
+// Record CLASS
+enum class RecordClass : uint16_t {
+    None = 0,
+    IN, // the Internet
+    CS, // the CSNET class (Obsolete)
+    CH, // the CHAOS class
+    HS, // Hesiod
+};
+
+// Record TYPE (aka RData types)
 enum class RecordType : uint16_t {
-    RDATA_None = 0,
+    None = 0,
 
-    RDATA_A = 1, // IPv4 address
-    RDATA_NS = 2, // authoritative name server
+    A = 1, // IPv4 address
+    NS = 2, // authoritative name server
 
-    RDATA_MD = 3, // mail destination (Obsolete - use MX)
-    RDATA_MF = 4, // mail forwarder (Obsolete - use MX)
+    MD = 3, // mail destination (Obsolete - use MX)
+    MF = 4, // mail forwarder (Obsolete - use MX)
 
-    RDATA_CNAME = 5, // canonical name for an alias
-    RDATA_SOA = 6, // marks the start of a zone of authority
+    CNAME = 5, // canonical name for an alias
+    SOA = 6, // marks the start of a zone of authority
 
-    RDATA_MB = 7, // mailbox domain name (Obsolete)
-    RDATA_MG = 8, // mail group member (Obsolete)
-    RDATA_MR = 9, // mail rename domain name (Obsolete)
-    RDATA_NULL = 10, // null record (Obsolete)
-    RDATA_WKS = 11, // well known service description (Obsolete)
+    MB = 7, // mailbox domain name (Obsolete)
+    MG = 8, // mail group member (Obsolete)
+    MR = 9, // mail rename domain name (Obsolete)
+    NUL = 10, // null record (Obsolete)
+    WKS = 11, // well known service description (Obsolete)
 
-    RDATA_PTR = 12, // domain name pointer
-    RDATA_HINFO = 13, // host information
+    PTR = 12, // domain name pointer
+    HINFO = 13, // host information
 
-    RDATA_MINFO = 14, // mailbox or mail list information (Obsolete)
+    MINFO = 14, // mailbox or mail list information (Obsolete)
 
-    RDATA_MX = 15, // mail exchange
-    RDATA_TXT = 16, // text strings
-    RDATA_AAAA = 28, // IPv6 address
-    RDATA_SRV = 33, // service record specifies
-    RDATA_NAPTR = 35, // naming authority pointer
+    MX = 15, // mail exchange
+    TXT = 16, // text strings
+    AAAA = 28, // IPv6 address
+    SRV = 33, // service record specifies
+    NAPTR = 35, // naming authority pointer
 
-    RDATA_OPT = 41, // pseudo-record to support EDNS
-    RDATA_ANY = 255,
+    OPT = 41, // pseudo-record to support EDNS
+    ANY = 255, // wildcard *
 };
 
 std::string toString(RecordClass c);

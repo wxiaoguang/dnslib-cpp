@@ -120,6 +120,7 @@ class Message {
 public:
     uint16_t mId = 0;
 
+    // the following fields are stored in one 16bit - by bits
     uint16_t mQr = 0; // query (0) or response (1)
     uint16_t mOpCode = 0; // kind of query
     uint16_t mAA = 0; // Authoritative Answer
