@@ -39,7 +39,7 @@ int main(int argc, char** argv) {
     cout << "-------------------------------------------------------" << endl;
 
     // add NAPTR query
-    auto qs = dns::QuestionSection("biloxi.ims", dns::RecordType::NAPTR);
+    auto qs = dns::QuestionSection("biloxi.ims", dns::RecordType::kNAPTR);
     m.questions.emplace_back(std::move(qs));
 
     sockfd = socket(AF_INET, SOCK_DGRAM, 0);

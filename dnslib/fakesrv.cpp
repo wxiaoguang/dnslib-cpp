@@ -142,7 +142,7 @@ int main(int argc, char **argv) {
 
         // add NAPTR answer
         auto rr = dns::ResourceRecord();
-        rr.mClass = dns::RecordClass::IN;
+        rr.mClass = dns::RecordClass::kIN;
         rr.mTtl = 1;
         auto rdata = std::make_shared<dns::RDataNAPTR>();
         rdata->mOrder = 1;
@@ -156,7 +156,7 @@ int main(int argc, char **argv) {
 
         // add A answer
         auto rrA = dns::ResourceRecord();
-        rrA.mClass = dns::RecordClass::IN;
+        rrA.mClass = dns::RecordClass::kIN;
         rrA.mTtl = 60;
         auto rdataA = std::make_shared<dns::RDataA>();
         uint8_t ip4[4] = {'\x01', '\x02', '\x03', '\x04' };

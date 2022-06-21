@@ -12,62 +12,64 @@
 namespace dns {
 
 // maximal length of domain label name
-const size_t MAX_MSG_LEN = 512;
-const size_t MAX_LABEL_LEN = 63;
-const size_t MAX_DOMAIN_LEN = 255;
+const size_t kMaxMsgLen = 512;
+const size_t kMaxLabelLen = 63;
+const size_t kMaxDomainLen = 255;
+
+// some names (NOERROR/IN) are polluated by Windows.h, so here use "k" prefix (as google code style)
 
 // RCode types, use uint16_t to match the type of Message::mRCode
 enum class ResponseCode : uint16_t {
-    NOERROR = 0,
-    FORMERR,
-    SERVFAIL,
-    NXDOMAIN,
-    NOTIMP,
-    REFUSED,
+    kNOERROR = 0,
+    kFORMERR,
+    kSERVFAIL,
+    kNXDOMAIN,
+    kNOTIMP,
+    kREFUSED,
     // 6-15 reserved for future use
 };
 
 // Record CLASS
 enum class RecordClass : uint16_t {
-    None = 0,
-    IN, // the Internet
-    CS, // the CSNET class (Obsolete)
-    CH, // the CHAOS class
-    HS, // Hesiod
+    kNone = 0,
+    kIN, // the Internet
+    kCS, // the CSNET class (Obsolete)
+    kCH, // the CHAOS class
+    kHS, // Hesiod
 };
 
 // Record TYPE (aka RData types)
 enum class RecordType : uint16_t {
-    None = 0,
+    kNone = 0,
 
-    A = 1, // IPv4 address
-    NS = 2, // authoritative name server
+    kA = 1, // IPv4 address
+    kNS = 2, // authoritative name server
 
-    MD = 3, // mail destination (Obsolete - use MX)
-    MF = 4, // mail forwarder (Obsolete - use MX)
+    kMD = 3, // mail destination (Obsolete - use MX)
+    kMF = 4, // mail forwarder (Obsolete - use MX)
 
-    CNAME = 5, // canonical name for an alias
+    kCNAME = 5, // canonical name for an alias
     SOA = 6, // marks the start of a zone of authority
 
-    MB = 7, // mailbox domain name (Obsolete)
-    MG = 8, // mail group member (Obsolete)
-    MR = 9, // mail rename domain name (Obsolete)
-    NUL = 10, // null record (Obsolete)
-    WKS = 11, // well known service description (Obsolete)
+    kMB = 7, // mailbox domain name (Obsolete)
+    kMG = 8, // mail group member (Obsolete)
+    kMR = 9, // mail rename domain name (Obsolete)
+    kNUL = 10, // null record (Obsolete)
+    kWKS = 11, // well known service description (Obsolete)
 
-    PTR = 12, // domain name pointer
-    HINFO = 13, // host information
+    kPTR = 12, // domain name pointer
+    kHINFO = 13, // host information
 
-    MINFO = 14, // mailbox or mail list information (Obsolete)
+    kMINFO = 14, // mailbox or mail list information (Obsolete)
 
-    MX = 15, // mail exchange
-    TXT = 16, // text strings
-    AAAA = 28, // IPv6 address
-    SRV = 33, // service record specifies
-    NAPTR = 35, // naming authority pointer
+    kMX = 15, // mail exchange
+    kTXT = 16, // text strings
+    kAAAA = 28, // IPv6 address
+    kSRV = 33, // service record specifies
+    kNAPTR = 35, // naming authority pointer
 
-    OPT = 41, // pseudo-record to support EDNS
-    ANY = 255, // wildcard *
+    kOPT = 41, // pseudo-record to support EDNS
+    kANY = 255, // wildcard *
 };
 
 std::string toString(RecordClass c);

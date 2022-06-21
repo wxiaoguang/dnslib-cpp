@@ -243,7 +243,7 @@ std::string Buffer::readDomainName(bool compressionAllowed) { // NOLINT(misc-no-
 
         // otherwise, we are reading a label
         {
-            if (ctrlCode > MAX_LABEL_LEN) {
+            if (ctrlCode > kMaxLabelLen) {
                 markBroken(BufferResult::LabelTooLong); // too long domain label (max length is 63 characters)
                 return domain;
             }
@@ -259,7 +259,7 @@ std::string Buffer::readDomainName(bool compressionAllowed) { // NOLINT(misc-no-
 
     linkPos.pop_back();
 
-    if (domain.length() > MAX_DOMAIN_LEN) {
+    if (domain.length() > kMaxDomainLen) {
         markBroken(BufferResult::DomainTooLong); // domain name is too long
         return domain;
     }
@@ -268,10 +268,10 @@ std::string Buffer::readDomainName(bool compressionAllowed) { // NOLINT(misc-no-
 }
 
 void Buffer::writeDomainName(const std::string &value, bool compressionAllowed) {
-    char domain[MAX_DOMAIN_LEN + 1]; // one additional byte for terminating zero byte
-    size_t domainLabelIndexes[MAX_DOMAIN_LEN + 1]; // one additional byte for terminating zero byte
+    char domain[kMaxDomainLen + 1]; // one additional byte for terminating zero byte
+    size_t domainLabelIndexes[kMaxDomainLen + 1]; // one additional byte for terminating zero byte
 
-    if (value.length() > MAX_DOMAIN_LEN) {
+    if (value.length() > kMaxDomainLen) {
         markBroken(BufferResult::DomainTooLong); // Domain name too long to be stored in dns message
         return;
     }
@@ -290,7 +290,7 @@ void Buffer::writeDomainName(const std::string &value, bool compressionAllowed) 
     size_t domainLabelIndexesCount = 0;
     while (true) {
         if (value[ix] == '.' || ix == value.length()) {
-            if (labelLen > MAX_LABEL_LEN) {
+            if (labelLen > kMaxLabelLen) {
                 markBroken(BufferResult::LabelTooLong); // Encoding failed because of too long domain label (max length is 63 characters)
                 return;
             }

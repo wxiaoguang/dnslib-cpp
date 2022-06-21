@@ -356,61 +356,61 @@ void ResourceRecord::decode(Buffer &buffer) {
 
     auto dataLen = buffer.readUint16();
     switch (mType) {
-        case RecordType::CNAME:
+        case RecordType::kCNAME:
             mRData = std::make_shared<RDataCNAME>();
             break;
-        case RecordType::HINFO:
+        case RecordType::kHINFO:
             mRData = std::make_shared<RDataHINFO>();
             break;
-        case RecordType::MB:
+        case RecordType::kMB:
             mRData = std::make_shared<RDataMB>();
             break;
-        case RecordType::MD:
+        case RecordType::kMD:
             mRData = std::make_shared<RDataMD>();
             break;
-        case RecordType::MF:
+        case RecordType::kMF:
             mRData = std::make_shared<RDataMF>();
             break;
-        case RecordType::MG:
+        case RecordType::kMG:
             mRData = std::make_shared<RDataMG>();
             break;
-        case RecordType::MINFO:
+        case RecordType::kMINFO:
             mRData = std::make_shared<RDataMINFO>();
             break;
-        case RecordType::MR:
+        case RecordType::kMR:
             mRData = std::make_shared<RDataMR>();
             break;
-        case RecordType::MX:
+        case RecordType::kMX:
             mRData = std::make_shared<RDataMX>();
             break;
-        case RecordType::NS:
+        case RecordType::kNS:
             mRData = std::make_shared<RDataNS>();
             break;
-        case RecordType::PTR:
+        case RecordType::kPTR:
             mRData = std::make_shared<RDataPTR>();
             break;
         case RecordType::SOA:
             mRData = std::make_shared<RDataSOA>();
             break;
-        case RecordType::TXT:
+        case RecordType::kTXT:
             mRData = std::make_shared<RDataTXT>();
             break;
-        case RecordType::A:
+        case RecordType::kA:
             mRData = std::make_shared<RDataA>();
             break;
-        case RecordType::WKS:
+        case RecordType::kWKS:
             mRData = std::make_shared<RDataWKS>();
             break;
-        case RecordType::AAAA:
+        case RecordType::kAAAA:
             mRData = std::make_shared<RDataAAAA>();
             break;
-        case RecordType::NAPTR:
+        case RecordType::kNAPTR:
             mRData = std::make_shared<RDataNAPTR>();
             break;
-        case RecordType::SRV:
+        case RecordType::kSRV:
             mRData = std::make_shared<RDataSRV>();
             break;
-        case RecordType::OPT:
+        case RecordType::kOPT:
             mRData = std::make_shared<RDataOPT>();
             break;
         default:
@@ -456,15 +456,15 @@ std::string ResourceRecord::toDebugString() {
 
 std::string toString(RecordClass c) {
     switch (c) {
-        case RecordClass::None:
+        case RecordClass::kNone:
             return "None";
-        case RecordClass::IN:
+        case RecordClass::kIN:
             return "IN";
-        case RecordClass::CS:
+        case RecordClass::kCS:
             return "CS";
-        case RecordClass::CH:
+        case RecordClass::kCH:
             return "CH";
-        case RecordClass::HS:
+        case RecordClass::kHS:
             return "HS";
         default:
             return "CLASS" + std::to_string((int)c);
@@ -473,45 +473,45 @@ std::string toString(RecordClass c) {
 
 std::string toString(RecordType t) {
     switch (t) {
-        case RecordType::None:
+        case RecordType::kNone:
             return "None";
-        case RecordType::CNAME:
+        case RecordType::kCNAME:
             return "CNAME";
-        case RecordType::HINFO:
+        case RecordType::kHINFO:
             return "HINFO";
-        case RecordType::MB:
+        case RecordType::kMB:
             return "MB";
-        case RecordType::MD:
+        case RecordType::kMD:
             return "MD";
-        case RecordType::MF:
+        case RecordType::kMF:
             return "MF";
-        case RecordType::MG:
+        case RecordType::kMG:
             return "MG";
-        case RecordType::MINFO:
+        case RecordType::kMINFO:
             return "MINFO";
-        case RecordType::MR:
+        case RecordType::kMR:
             return "MR";
-        case RecordType::MX:
+        case RecordType::kMX:
             return "MX";
-        case RecordType::NS:
+        case RecordType::kNS:
             return "NS";
-        case RecordType::PTR:
+        case RecordType::kPTR:
             return "PTR";
         case RecordType::SOA:
             return "SOA";
-        case RecordType::TXT:
+        case RecordType::kTXT:
             return "TXT";
-        case RecordType::A:
+        case RecordType::kA:
             return "A";
-        case RecordType::WKS:
+        case RecordType::kWKS:
             return "WKS";
-        case RecordType::AAAA:
+        case RecordType::kAAAA:
             return "AAAA";
-        case RecordType::NAPTR:
+        case RecordType::kNAPTR:
             return "NAPTR";
-        case RecordType::SRV:
+        case RecordType::kSRV:
             return "SRV";
-        case RecordType::OPT:
+        case RecordType::kOPT:
             return "OPT";
         default:
             return "TYPE" + std::to_string((int)t);
