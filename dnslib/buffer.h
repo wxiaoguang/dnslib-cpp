@@ -33,7 +33,6 @@ enum class BufferResult {
  * <character-string> is a single length octet followed by that number
  * of characters.  <character-string> is treated as binary information,
  * and can be up to 256 characters in length (including the length octet).
- *
  */
 class Buffer {
 public:
@@ -84,9 +83,10 @@ private:
 
     uint8_t *bufBase;
     uint8_t *bufPtr;
-    const size_t bufLen;
+    size_t bufLen;
 
-    std::vector<size_t> linkPos; // list of link positions visited when decoding domain name
+    std::vector<size_t> domainLinkPos; // list of link positions visited when decoding
+    std::vector<std::pair<std::vector<uint8_t>, size_t>> domainPositions; // list of domain names and their positions in buffer when encoding
 };
 
 } // namespace

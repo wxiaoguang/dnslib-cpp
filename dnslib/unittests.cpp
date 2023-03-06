@@ -19,6 +19,25 @@ static int assertPass = 0, assertFail = 0;
 #define TEST_ASSERT(exp) do { if ((exp)) { assertPass++; } else { assertFail++; std::cout << #exp << " failed" << std::endl; } } while(0)
 #define TEST_ASSERT_EQUAL(a, b) do { if ((a) == (b)) { assertPass++; } else { assertFail++; std::cout << #a << " == " << #b << " failed. a=" << (a) << ", b=" << (b) << std::endl; } } while(0)
 
+std::vector<uint8_t> hex2bin(const std::string &s) {
+    std::vector<uint8_t> result;
+    char buf[3] = {0};
+    for (size_t i = 0; i < s.length();) {
+        if (isspace(s[i])) {
+            i++;
+            continue;
+        }
+        if (i + 1 >= s.length()) {
+            std::cerr << "Invalid hex string: " << s << std::endl;
+            return result;
+        }
+        buf[0] = s[i++];
+        buf[1] = s[i++];
+        result.push_back((uint8_t) strtol(buf, NULL, 16));
+    }
+    return result;
+}
+
 static void testBuffer() {
     // check decoding of character string
     char b1[] = {'\x05', 'h', 'e', 'l', 'l', 'o', '\x00', 'a', 'h', 'o', 'j'};
@@ -395,6 +414,41 @@ static void testCreatePacket() {
     // todo check buffer
 }
 
+static void testNameCompression() {
+    // a test packet with name compression
+    auto s = R"(
+56 d0 81 80 00 01 00 09 00 00 00 00 0d 61 61 61
+61 61 61 61 61 61 61 61 61 61 08 62 62 62 62 62
+62 62 62 03 63 63 63 00 00 01 00 01 c0 0c 00 05
+00 01 00 00 00 09 00 27 0d 61 61 61 61 61 61 61
+61 61 61 61 61 61 08 62 62 62 62 62 62 62 62 03
+63 63 63 01 64 07 65 65 65 65 65 65 65 c0 23 c0
+38 00 01 00 01 00 00 00 09 00 04 f1 f2 f3 f4 c0
+38 00 01 00 01 00 00 00 09 00 04 f1 f2 f3 f5 c0
+38 00 01 00 01 00 00 00 09 00 04 f1 f2 f3 f6 c0
+38 00 01 00 01 00 00 00 09 00 04 f1 f2 f3 f7 c0
+38 00 01 00 01 00 00 00 09 00 04 f1 f2 f3 f8 c0
+38 00 01 00 01 00 00 00 09 00 04 f1 f2 f3 f9 c0
+38 00 01 00 01 00 00 00 09 00 04 f1 f2 f3 fa c0
+38 00 01 00 01 00 00 00 09 00 04 f1 f2 f3 fb
+)";
+    auto buf = hex2bin(s);
+
+    // try to decode it and encode it, to check if the result is the same
+
+    dns::Message m;
+    TEST_ASSERT(m.decode(buf.data(), buf.size()) == dns::BufferResult::NoError);
+
+    char mesg[2000];
+    size_t mesgSize;
+    TEST_ASSERT(m.encode(mesg, 2000, mesgSize) == dns::BufferResult::NoError);
+
+    TEST_ASSERT_EQUAL(buf.size(), mesgSize);
+    if (buf.size() == mesgSize) {
+        TEST_ASSERT(memcmp(buf.data(), mesg, mesgSize) == 0);
+    }
+}
+
 #define TEST(f) do { std::cout << "Run: "  << #f << std::endl; f(); } while(0)
 
 int main() {
@@ -418,6 +472,7 @@ int main() {
     TEST(testPacket);
     TEST(testPacketInvalid);
     TEST(testCreatePacket);
+    TEST(testNameCompression);
 
     std::cout << "====" << std::endl;
     std::cout << "PASS: " << assertPass << ", FAIL: " << assertFail << std::endl;

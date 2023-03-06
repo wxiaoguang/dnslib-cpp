@@ -200,12 +200,12 @@ std::string Buffer::readDomainName(bool compressionAllowed) { // NOLINT(misc-no-
     std::string domain;
 
     // store current position to avoid of endless recursion for "bad link addresses"
-    if (std::find(linkPos.begin(), linkPos.end(), pos()) != linkPos.end()) {
+    if (std::find(domainLinkPos.begin(), domainLinkPos.end(), pos()) != domainLinkPos.end()) {
         markBroken(BufferResult::LabelCompressionLoop); // labels compression contains endless loop of links
         return domain;
     }
 
-    linkPos.push_back(pos());
+    domainLinkPos.push_back(pos());
 
     // read domain name from buffer
     while (true) {
@@ -257,7 +257,7 @@ std::string Buffer::readDomainName(bool compressionAllowed) { // NOLINT(misc-no-
         }
     }
 
-    linkPos.pop_back();
+    domainLinkPos.pop_back();
 
     if (domain.length() > kMaxDomainLen) {
         markBroken(BufferResult::DomainTooLong); // domain name is too long
@@ -268,108 +268,71 @@ std::string Buffer::readDomainName(bool compressionAllowed) { // NOLINT(misc-no-
 }
 
 void Buffer::writeDomainName(const std::string &value, bool compressionAllowed) {
-    char domain[kMaxDomainLen + 1]; // one additional byte for terminating zero byte
-    size_t domainLabelIndexes[kMaxDomainLen + 1]; // one additional byte for terminating zero byte
-
     if (value.length() > kMaxDomainLen) {
         markBroken(BufferResult::DomainTooLong); // Domain name too long to be stored in dns message
         return;
     }
+
     // write empty domain
-    if (value.length() == 0) {
+    if (value.empty() || value == ".") {
         writeUint8(0);
         return;
     }
 
-    // convert value to <domain> without links as defined in RFC
-    // blue.ims.cz -> |4|b|l|u|e|3|i|m|s|2|c|z|0|
-    size_t labelLen = 0;
-    size_t labelLenPos = 0;
-    size_t domainPos = 1;
-    size_t ix = 0;
-    size_t domainLabelIndexesCount = 0;
-    while (true) {
-        if (value[ix] == '.' || ix == value.length()) {
-            if (labelLen > kMaxLabelLen) {
-                markBroken(BufferResult::LabelTooLong); // Encoding failed because of too long domain label (max length is 63 characters)
+    std::vector<uint8_t> domain;
+    std::vector<size_t> domainLabelIndexes;
+
+    {
+        // convert value to <domain> without links as defined in RFC: abcd.efg.hi -> |0x4|a|b|c|d|0x3|e|f|g|0x2|h|i|0x0|
+        domain.push_back(0); // first byte is label length (will be set later)
+        size_t labelLenPos = 0; // position of label length byte
+        for (size_t i = 0; i <= value.length(); i++) {
+            if (i == value.length() || value[i] == '.') {
+                auto labelLen = (uint8_t) (domain.size() - labelLenPos - 1);
+                if (labelLen > kMaxLabelLen) {
+                    markBroken(BufferResult::LabelTooLong); // Encoding failed because of too long domain label (max length is 63 characters)
+                    return;
+                }
+                domain[labelLenPos] = labelLen;
+                domainLabelIndexes.push_back(labelLenPos);
+                domain.push_back(0); // start a new label (with length byte)
+                labelLenPos = domain.size() - 1;
+                if (i == value.length() - 1) {
+                    break; // do not add duplicate zero byte at the end
+                }
+            } else {
+                domain.push_back(value[i]);
+            }
+        }
+    }
+
+    if (!compressionAllowed) {
+        // compression is disabled, domain is written as it is
+        writeBytes(domain.data(), domain.size());
+        return;
+    }
+
+    // look for domain name parts in buffer and look for fragments for compression
+    // loop over all domain labels
+    for (size_t i = 0; i < domainLabelIndexes.size(); i++) {
+        uint8_t *subDomain = domain.data() + domainLabelIndexes[i]; // pointer to subdomain (including initial byte for first label length)
+        size_t subDomainLen = domain.size() - domainLabelIndexes[i];
+
+        // find the subDomain in the domainPositions
+        for (auto &domainPos : domainPositions) {
+            if (domainPos.first.size() == subDomainLen && memcmp(domainPos.first.data(), subDomain, subDomainLen) == 0) {
+                // link starts with value 0b11000000_00000000
+                writeUint16(0xc000 + domainPos.second);
                 return;
             }
-            domain[labelLenPos] = (char)labelLen;
-            domainLabelIndexes[domainLabelIndexesCount++] = labelLenPos;
-
-            // ignore dot at the end since we do not want to encode
-            // empty label (which will produce one extra 0x00 byte)
-            if (value[ix] == '.' && ix == value.length() - 1) {
-                break;
-            }
-
-            // finish at the end of the string value
-            if (ix == value.length()) {
-                // terminating zero byte
-                domain[domainPos] = 0;
-                domainPos++;
-                break;
-            }
-
-            labelLenPos = domainPos;
-            labelLen = 0;
-        } else {
-            labelLen++;
-            domain[domainPos] = value[ix];
         }
-        domainPos++;
-        ix++;
+        // current label didn't appear before, write current label and remember it in domainPositions
+        auto subLabelLen = (uint8_t) subDomain[0];
+        domainPositions.emplace_back(std::vector<uint8_t>(subDomain, subDomain + subDomainLen), pos());
+        writeBytes((uint8_t *) subDomain, subLabelLen + 1);
     }
 
-    if (compressionAllowed) {
-        // look for domain name parts in buffer and look for fragments for compression
-        // loop over all domain labels
-        int compressionTipPos = -1;
-        for (size_t i = 0; i < domainLabelIndexesCount; i++) {
-            // position of current label in domain buffer
-            auto domainLabelPos = domainLabelIndexes[i];
-            // pointer to subdomain (including initial byte for first label length)
-            char *subDomain = domain + domainLabelPos;
-            // length of subdomain (e.g. |3|i|m|s|2|c|z|0| for blue.ims.cz)
-            size_t subDomainLen = domainPos - domainLabelPos;
-
-            // find buffer range that makes sense to search in
-            size_t buffLen = bufPtr - bufBase;
-            // search if buffer is large enough for searching
-            if (buffLen > subDomainLen) {
-                // modify buffer length
-                buffLen -= subDomainLen;
-                // go through buffer from beginning and try to find occurrence of compression tip
-                for (size_t buffPos = 0; buffPos < buffLen; buffPos++) {
-                    // compare compression tip and content at current position in buffer
-                    if (memcmp(bufBase + buffPos, subDomain, subDomainLen) == 0) {
-                        compressionTipPos = int(buffPos);
-                        break;
-                    }
-                }
-            }
-
-            if (compressionTipPos != -1) {
-                // link starts with value bin(1100000000000000)
-                size_t linkValue = 0xc000;
-                linkValue += compressionTipPos;
-                writeUint16(linkValue);
-                break;
-            } else {
-                // write label
-                auto subLabelLen = (uint8_t)subDomain[0];
-                writeBytes((uint8_t *) subDomain, subLabelLen + 1);
-            }
-        }
-
-        // write terminating zero if no compression tip was found and all labels are written to buffer
-        if (compressionTipPos == -1) {
-            writeUint8(0);
-        }
-    } else {
-        // compression is disabled, domain is written as it is
-        writeBytes((uint8_t *) domain, domainPos);
-    }
+    writeUint8(0); // write terminating zero if no compression tip was found and all labels are written to buffer
 }
 
 uint8_t *Buffer::movePtr(uint8_t *newPtr) {
